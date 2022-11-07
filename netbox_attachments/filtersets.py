@@ -5,7 +5,7 @@ from utilities.filters import ContentTypeFilter
 from .models import NetBoxAttachment
 
 
-class InvMonFileAttachmentFilterSet(BaseFilterSet):
+class NetBoxAttachmentFilterSet(BaseFilterSet):
     q = django_filters.CharFilter(
         method='search',
         label='Search',
