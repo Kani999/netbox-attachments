@@ -21,12 +21,12 @@
                             <td>{{ attachment.size|filesizeformat }}</td>
                             <td>{{ attachment.created }}</td>
                             <td class="text-end noprint">
-                                <a href="{% url 'plugins:inventory_monitor:invmon_file_attachment_edit' pk=attachment.pk %}"
+                                <a href="{% url 'plugins:netbox_attachments:netbox_attachment_edit' pk=attachment.pk %}"
                                    class="btn btn-warning btn-sm lh-1"
                                    title="Edit Attachment">
                                     <i class="mdi mdi-pencil" aria-hidden="true"></i>
                                 </a>
-                                <a href="{% url 'plugins:inventory_monitor:invmon_file_attachment_delete' pk=attachment.pk %}"
+                                <a href="{% url 'plugins:netbox_attachments:netbox_attachment_delete' pk=attachment.pk %}"
                                    class="btn btn-danger btn-sm lh-1"
                                    title="Delete Attachment">
                                     <i class="mdi mdi-trash-can-outline" aria-hidden="true"></i>
@@ -41,7 +41,7 @@
         {% endwith %}
     </div>
     <div class="card-footer text-end noprint">
-        <a href="{% url 'plugins:inventory_monitor:invmon_file_attachment_add' %}?content_type={{ object|content_type_id }}&object_id={{ object.pk }}"
+        <a href="{% url 'plugins:netbox_attachments:netbox_attachment_add' %}?content_type={{ object|content_type_id }}&object_id={{ object.pk }}"
            class="btn btn-primary btn-sm">
             <i class="mdi mdi-plus-thick" aria-hidden="true"></i> Add Attachment
         </a>
