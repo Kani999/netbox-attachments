@@ -2,7 +2,7 @@
 
 Manage attachments for any model in NetBox
 
-### Configuration
+### Configuration / Installation
 - `configuration.py`
 ```
 # Add plugin
@@ -27,3 +27,12 @@ PLUGINS_CONFIG = {
       ```
     - It's same as for the core models e.g.
         - https://github.com/netbox-community/netbox/blob/c1b7f09530f0293d0f053b8930539b1d174cd03b/netbox/templates/dcim/device.html#L288
+
+# Usage
+- Install Plugin 
+- Open any model in netbox 
+- Add attachment under the `Attachments` panel
+
+# TODO: 
+- adding templates to list all attachments
+- delete attachments from disk
