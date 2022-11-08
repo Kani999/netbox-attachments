@@ -4,12 +4,9 @@ from extras.plugins import PluginTemplateExtension
 from django.apps import apps
 from .models import NetBoxAttachment
 
+
 plugin_settings = settings.PLUGINS_CONFIG.get('netbox_attachments', {})
-available_apps = plugin_settings.get("apps", [
-                                     'dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless'])
-
 template_extensions = []
-
 
 def right_page(self):
     obj = self.context['object']
@@ -23,7 +20,7 @@ def right_page(self):
 
 # Generate plugin extension for all classes
 for app_label, classes in apps.all_models.items():
-    if app_label in available_apps:
+    if app_label in plugin_settings.get("apps"):
         for model_name, model_class in classes.items():
             name = model_name + "_plugin_template_extension"
             dynamic_klass = type(name,
