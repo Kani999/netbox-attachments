@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.urls import reverse
 from netbox.models import NetBoxModel
 from utilities.querysets import RestrictedQuerySet
 
@@ -34,12 +35,17 @@ class NetBoxAttachment(NetBoxModel):
 
     class Meta:
         ordering = ('name', 'pk')  # name may be non-unique
+        verbose_name_plural = "NetBox Attachments"
+        verbose_name = "NetBox Attachment"
 
     def __str__(self):
         if self.name:
             return self.name
         filename = self.file.name.rsplit('/', 1)[-1]
         return filename.split('_', 2)[2]
+
+    def get_absolute_url(self):
+        return reverse('plugins:netbox_attachments:netboxattachment', args=[self.pk])
 
     def delete(self, *args, **kwargs):
 

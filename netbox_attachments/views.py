@@ -2,7 +2,20 @@ from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from netbox.views import generic
 
-from . import forms, models
+from . import filtersets, forms, models, tables
+
+
+class NetBoxAttachmentView(generic.ObjectView):
+    controls = []
+    queryset = models.NetBoxAttachment.objects.all()
+
+
+class NetBoxAttachmentListView(generic.ObjectListView):
+    actions = ['export']
+    queryset = models.NetBoxAttachment.objects.all()
+    table = tables.NetBoxAttachmentTable
+    filterset = filtersets.NetBoxAttachmentFilterSet
+    filterset_form = forms.NetBoxAttachmentFilterForm
 
 
 class NetBoxAttachmentEditView(generic.ObjectEditView):
@@ -20,7 +33,10 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
         return instance
 
     def get_return_url(self, request, obj=None):
-        return obj.parent.get_absolute_url() if obj else super().get_return_url(request)
+        if return_path := request.GET.get("return_url"):
+            return return_path
+        else:
+            return obj.parent.get_absolute_url() if obj else super().get_return_url(request)
 
     def get_extra_addanother_params(self, request):
         return {
@@ -33,4 +49,7 @@ class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
     queryset = models.NetBoxAttachment.objects.all()
 
     def get_return_url(self, request, obj=None):
-        return obj.parent.get_absolute_url() if obj else super().get_return_url(request)
+        if return_path := request.GET.get("return_url"):
+            return return_path
+        else:
+            return obj.parent.get_absolute_url() if obj else super().get_return_url(request)
