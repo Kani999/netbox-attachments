@@ -22,6 +22,7 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
     queryset = models.NetBoxAttachment.objects.all()
     form = forms.NetBoxAttachmentForm
     template_name = 'netbox_attachments/netbox_attachment_edit.html'
+    default_return_url = 'plugins:netbox_attachments:netboxattachment_list'
 
     def alter_object(self, instance, request, args, kwargs):
         if not instance.pk:
@@ -32,12 +33,6 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
                 content_type.model_class(), pk=request.GET.get('object_id'))
         return instance
 
-    def get_return_url(self, request, obj=None):
-        if return_path := request.GET.get("return_url"):
-            return return_path
-        else:
-            return obj.parent.get_absolute_url() if obj else super().get_return_url(request)
-
     def get_extra_addanother_params(self, request):
         return {
             'content_type': request.GET.get('content_type'),
@@ -47,9 +42,4 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
 
 class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
     queryset = models.NetBoxAttachment.objects.all()
-
-    def get_return_url(self, request, obj=None):
-        if return_path := request.GET.get("return_url"):
-            return return_path
-        else:
-            return obj.parent.get_absolute_url() if obj else super().get_return_url(request)
+    default_return_url = 'plugins:netbox_attachments:netboxattachment_list'
