@@ -8,7 +8,7 @@ plugin_settings = settings.PLUGINS_CONFIG.get('netbox_attachments', {})
 template_extensions = []
 
 
-def right_page(self):
+def attachments_panel(self):
     obj = self.context['object']
     app_label, model = self.model.split(".")
     content_type_id = ContentType.objects.get(app_label=app_label,
@@ -27,12 +27,13 @@ def right_page(self):
 for content_type in ContentType.objects.all():
     app_label = content_type.app_label
     model = content_type.model
+    display_default = plugin_settings.get("display_default", "right_page")
 
     if app_label in plugin_settings.get("apps"):
         klass_name = f"{app_label}_{model}_plugin_template_extension"
         dynamic_klass = type(klass_name,
                              (PluginTemplateExtension, ),
                              {"model": f"{app_label}.{model}",
-                                 "right_page": right_page})
+                              display_default: attachments_panel})
 
         template_extensions.append(dynamic_klass)
