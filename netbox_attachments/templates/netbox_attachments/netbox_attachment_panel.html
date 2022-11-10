@@ -2,8 +2,8 @@
 <div class="card">
     <h5 class="card-header">Attachments</h5>
     <div class="card-body">
-        {% with files=files %}
-            {% if files.exists %}
+        {% with netbox_attachments=netbox_attachments %}
+            {% if netbox_attachments.exists %}
                 <table class="table table-hover">
                     <tr>
                         <th>Name</th>
@@ -11,7 +11,7 @@
                         <th>Created</th>
                         <th></th>
                     </tr>
-                    {% for attachment in files %}
+                    {% for attachment in netbox_attachments %}
                         <tr{% if not attachment.size %} class="table-danger"{% endif %}>
                             <td>
                                 <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=attachment.pk %}">{{ attachment }}</a> (<a href="{{ attachment.file.url }}" target="_blank">Download</a>)
