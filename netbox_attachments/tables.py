@@ -8,6 +8,7 @@ ATTACHMENT_LINK = """
     {{ record }}
 </a> (<a href="{{record.file.url}}" target="_blank">Download</a>)
 """
+FILE_SIZE = "{{ record.size|filesizeformat }}"
 
 
 class NetBoxAttachmentTable(NetBoxTable):
@@ -15,6 +16,8 @@ class NetBoxAttachmentTable(NetBoxTable):
     content_type = columns.ContentTypeColumn()
     parent = tables.RelatedLinkColumn()
     tags = columns.TagColumn()
+    file = tables.FileColumn()
+    size = tables.TemplateColumn(template_code=FILE_SIZE)
 
     class Meta(NetBoxTable.Meta):
         model = NetBoxAttachment
