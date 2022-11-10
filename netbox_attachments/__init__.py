@@ -13,7 +13,7 @@ class NetBoxAttachmentsConfig(PluginConfig):
     default_settings = {
         'apps': ['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless'],
         'display_default': "right_page",
-        #'display_setting': { 'dcim.devicerole': 'full_width_page' }
+        'display_setting': {}
     }
     required_settings = []
     min_version = '3.3.4'
