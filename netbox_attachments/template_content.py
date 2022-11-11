@@ -1,5 +1,8 @@
+import logging
+
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db.utils import OperationalError
 from extras.plugins import PluginTemplateExtension
 
 from .models import NetBoxAttachment
@@ -43,18 +46,27 @@ def get_display_on(app_model_name):
 
 
 # Generate plugin extension for all classes
-for content_type in ContentType.objects.all():
-    app_label = content_type.app_label
-    model = content_type.model
-    app_model_name = f"{app_label}.{model}"
+try:
+    for content_type in ContentType.objects.all():
+        app_label = content_type.app_label
+        model = content_type.model
+        app_model_name = f"{app_label}.{model}"
 
-    if app_label in plugin_settings.get("apps"):
-        klass_name = f"{app_label}_{model}_plugin_template_extension"
+        if app_label in plugin_settings.get("apps"):
+            klass_name = f"{app_label}_{model}_plugin_template_extension"
 
-        dynamic_klass = type(klass_name,
-                             (PluginTemplateExtension,),
-                             {"model": app_model_name,
-                              get_display_on(app_model_name): attachments_panel}
-                             )
+            dynamic_klass = type(klass_name,
+                                 (PluginTemplateExtension,),
+                                 {"model": app_model_name,
+                                  get_display_on(app_model_name): attachments_panel}
+                                 )
 
-        template_extensions.append(dynamic_klass)
+            template_extensions.append(dynamic_klass)
+except OperationalError as e:
+    logger = logging.getLogger('netbox.netbox-attachments')
+    logger.error("Database is not ready")
+    logger.debug(e)
+except Exception as e:
+    logger = logging.getLogger('netbox.netbox-attachments')
+    logger.error("Unexpected error - netbox-attachments won't be rendered")
+    logger.debug(e)
