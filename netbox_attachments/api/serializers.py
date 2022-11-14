@@ -21,7 +21,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
     class Meta:
         model = NetBoxAttachment
         fields = [
-            'id', 'url', 'display', 'content_type', 'object_id', 'parent', 'name', 'file', 'created', 'last_updated',
+            'id', 'url', 'display', 'content_type', 'object_id', 'parent', 'name', 'file', 'created', 'last_updated', 'comments',
         ]
 
     def validate(self, data):
