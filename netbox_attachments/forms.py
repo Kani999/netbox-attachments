@@ -4,16 +4,18 @@ from django.utils.translation import gettext as _
 from netbox.forms import NetBoxModelFilterSetForm, NetBoxModelForm
 from utilities.forms import (APISelectMultiple,
                              DynamicModelMultipleChoiceField, TagFilterField)
+from utilities.forms.fields import CommentField
 
 from .models import NetBoxAttachment
 
 
 class NetBoxAttachmentForm(NetBoxModelForm):
+    comments = CommentField(label="Comment")
 
     class Meta:
         model = NetBoxAttachment
         fields = [
-            'name', 'file', 'tags'
+            'name', 'file', 'comments', 'tags',
         ]
 
 

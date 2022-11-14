@@ -28,6 +28,9 @@ class NetBoxAttachment(NetBoxModel):
         max_length=50,
         blank=True
     )
+    comments = models.TextField(
+        blank=True
+    )
 
     objects = RestrictedQuerySet.as_manager()
 
