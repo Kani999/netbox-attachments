@@ -27,7 +27,9 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
     def validate(self, data):
         # Validate that the parent object exists
         try:
-            data['content_type'].get_object_for_this_type(id=data['object_id'])
+            if 'content_type' in data and 'object_id' in data:
+                data['content_type'].get_object_for_this_type(
+                    id=data['object_id'])
         except ObjectDoesNotExist:
             raise serializers.ValidationError(
                 "Invalid parent object: {} ID {}".format(
