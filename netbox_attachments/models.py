@@ -25,7 +25,7 @@ class NetBoxAttachment(NetBoxModel):
         upload_to=attachment_upload,
     )
     name = models.CharField(
-        max_length=50,
+        max_length=254,
         blank=True
     )
     comments = models.TextField(
