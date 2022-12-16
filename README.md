@@ -13,7 +13,7 @@ This plugin provide following Models:
 | Netbox   | Plugin   |
 | -------- | -------- |
 | >= 3.3.4 | >= 0.0.5 |
-|          |          |
+| >= 3.4.0 | >= 1.0.6 |
 
 ## Installation
 
