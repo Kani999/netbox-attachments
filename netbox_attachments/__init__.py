@@ -17,7 +17,7 @@ class NetBoxAttachmentsConfig(PluginConfig):
     }
     required_settings = []
     min_version = '3.3.4'
-    max_version = '3.3.99'
+    max_version = '3.4.99'
 
 
 config = NetBoxAttachmentsConfig
