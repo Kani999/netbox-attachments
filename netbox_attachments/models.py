@@ -24,6 +24,12 @@ class NetBoxAttachment(NetBoxModel):
     file = models.FileField(
         upload_to=attachment_upload,
     )
+    size = models.PositiveBigIntegerField(
+        editable=False,
+        null=True,
+        blank=True,
+        help_text='Size of the file in bytes',
+    )
     name = models.CharField(
         max_length=254,
         blank=True
@@ -63,24 +69,12 @@ class NetBoxAttachment(NetBoxModel):
         # before the request finishes. (For example, to display a message indicating the ImageAttachment was deleted.)
         self.file.name = _name
 
-    @property
-    def size(self):
-        """
-        Wrapper around `file.size` to suppress an OSError in case the file is inaccessible. Also opportunistically
-        catch other exceptions that we know other storage back-ends to throw.
-        """
-        expected_exceptions = [OSError]
-
-        try:
-            from botocore.exceptions import ClientError
-            expected_exceptions.append(ClientError)
-        except ImportError:
-            pass
-
-        try:
-            return self.file.size
-        except tuple(expected_exceptions):
-            return None
+    def save(self, *args, **kwargs):
+        if self.file:
+            if not self.name:
+                self.name = self.file.name.rsplit('/', 1)[-1]
+            self.size = self.file.size
+        super().save(*args, **kwargs)
 
     def to_objectchange(self, action):
         objectchange = super().to_objectchange(action)
