@@ -1,8 +1,10 @@
-from extras.plugins import PluginMenuItem
+from extras.plugins import PluginMenu, PluginMenuItem
 
-menu_items = (
-    PluginMenuItem(
-        link='plugins:netbox_attachments:netboxattachment_list',
-        link_text='Attachments'
+menu = PluginMenu(
+    label='Attachments',
+    icon_class="mdi mdi-paperclip",
+    groups=(
+        ("", (PluginMenuItem(link="plugins:netbox_attachments:netboxattachment_list",
+         link_text="NetBox Attachments"),),),
     ),
 )
