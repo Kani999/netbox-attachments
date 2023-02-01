@@ -12,11 +12,11 @@ class NetBoxAttachmentsConfig(PluginConfig):
     base_url = 'netbox-attachments'
     default_settings = {
         'apps': ['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless'],
-        'display_default': "right_page",
+        'display_default': "additional_tab",
         'display_setting': {}
     }
     required_settings = []
-    min_version = '3.3.4'
+    min_version = '3.4.3'
     max_version = '3.4.99'
 
 

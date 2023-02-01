@@ -1,0 +1,29 @@
+{% extends base_template_name %} 
+{% load render_table from django_tables2 %} 
+{% load static %} 
+
+{% block content %} 
+    {% load helpers %}
+
+    <div class="card">
+        <div class="card-body" id="object_list">
+            {% include 'inc/table_controls_htmx.html' with table_modal="NetBoxAttachmentTable_config" %} 
+            {% include 'htmx/table.html' %}
+        </div>
+    </div>
+    <div class="noprint bulk-buttons">
+        <div class="bulk-button-group"></div>
+        <div class="bulk-button-group">
+            <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?content_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path }}" 
+            class="btn btn-primary btn-sm">
+                <i class="mdi mdi-plus-thick" aria-hidden="true"></i> 
+            Add Attachment
+            </a>
+        </div>
+    </div>
+{% endblock content %} 
+
+{% block modals %} 
+    {{ block.super }} 
+    {% table_config_form table %} 
+{% endblock modals %}

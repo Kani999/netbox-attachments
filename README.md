@@ -44,14 +44,14 @@ The following options are available:
   - **Description**: Display `Attachments` feature on all models definded under the app label. Attachmets are displayed on `right_page` of the detail-view of model.
 - `display_default`:
   - **Type**: String
-  - **Default**: "right_page"
-  - **Options**: "left_page", "right_page", "full_width_page"
+  - **Default**: "additional_tab"
+  - **Options**: "left_page", "right_page", "full_width_page", "additional_tab"
   - **Description**: Setup default setting of where attachments should be displayed under the models
 - `display_setting`:
   - **Type**: Dict
   - **Default**: {}
   - **Options**: {<app_label.model>: <prefeered_display>}
-  - **Example**: {'dcim.devicerole': 'full_width_page', 'dcim.device': 'left_page', 'ipam.vlan': 'right_page'}
+  - **Example**: {'dcim.devicerole': 'full_width_page', 'dcim.device': 'left_page', 'ipam.vlan': 'additional_tab'}
   - **Description**: Set display setting for concrete model
   - **Tip**: Proper `app_label` and `model` names could be found at API `<your_netbox_url>/api/extras/content-types/`
 
@@ -62,7 +62,7 @@ PLUGINS_CONFIG = {
     'netbox_attachments': {
         'apps': ['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless', 'inventory_monitor'],
         'display_default': "right_page",
-        'display_setting': {'ipam.vlan': "left_page", 'dcim.device': "full_width_page", 'dcim.devicerole': "full_width_page", 'inventory_monitor.probe': "right_page"}
+        'display_setting': {'ipam.vlan': "left_page", 'dcim.device': "full_width_page", 'dcim.devicerole': "full_width_page", 'inventory_monitor.probe': "additional_tab"}
     }
 }
 ```
