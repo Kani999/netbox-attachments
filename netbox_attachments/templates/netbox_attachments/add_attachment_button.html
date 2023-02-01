@@ -1,0 +1,5 @@
+<a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?content_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ object.get_absolute_url }}" 
+class="btn btn-secondary btn-sm">
+    <i class="mdi mdi-paperclip" aria-hidden="true"></i>
+    Assign Attachment
+</a>
