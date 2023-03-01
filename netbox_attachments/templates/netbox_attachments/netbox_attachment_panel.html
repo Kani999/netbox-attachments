@@ -7,6 +7,7 @@
                 <table class="table table-hover">
                     <tr>
                         <th>Name</th>
+                        <th>Comment</th>
                         <th>Size</th>
                         <th>Created</th>
                         <th></th>
@@ -16,6 +17,7 @@
                             <td>
                                 <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=attachment.pk %}">{{ attachment }}</a> (<a href="{{ attachment.file.url }}" target="_blank">Download</a>)
                             </td>
+                            <td>{{ attachment.comments }}</td>
                             <td>{{ attachment.size|filesizeformat }}</td>
                             <td>{{ attachment.created }}</td>
                             <td class="text-end noprint">
