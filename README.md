@@ -55,6 +55,9 @@ The following options are available:
   - **Description**: Set display setting for concrete model
   - **Tip**: Proper `app_label` and `model` names could be found at API `<your_netbox_url>/api/extras/content-types/`
 
+> **Warning**
+> `additional_tab` does not work for Plugin models
+
 ### Configuration Example:
 
 ```
