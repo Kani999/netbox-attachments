@@ -16,8 +16,8 @@ class NetBoxAttachmentsConfig(PluginConfig):
         'display_setting': {}
     }
     required_settings = []
-    min_version = '3.5.0'
-    max_version = '3.5.99'
+    #min_version = '3.5-beta2'
+    #max_version = '3.5.99'
 
 
 config = NetBoxAttachmentsConfig
