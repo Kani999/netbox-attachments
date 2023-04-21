@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from drf_yasg.utils import swagger_serializer_method
+#from drf_yasg.utils import swagger_serializer_method
 from netbox.api.fields import ContentTypeField
 from netbox.api.serializers import NetBoxModelSerializer
 from netbox.constants import NESTED_SERIALIZER_PREFIX
@@ -41,7 +41,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
 
         return data
 
-    @swagger_serializer_method(serializer_or_field=serializers.JSONField)
+    #@swagger_serializer_method(serializer_or_field=serializers.JSONField)
     def get_parent(self, obj):
         serializer = get_serializer_for_model(
             obj.parent, prefix=NESTED_SERIALIZER_PREFIX)

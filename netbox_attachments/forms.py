@@ -2,9 +2,8 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import gettext as _
 from netbox.forms import NetBoxModelFilterSetForm, NetBoxModelForm
-from utilities.forms import (APISelectMultiple,
-                             DynamicModelMultipleChoiceField, TagFilterField)
-from utilities.forms.fields import CommentField
+from utilities.forms.widgets.apiselect import APISelectMultiple
+from utilities.forms.fields import DynamicModelMultipleChoiceField, TagFilterField, CommentField
 
 from .models import NetBoxAttachment
 
