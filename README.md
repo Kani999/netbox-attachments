@@ -15,6 +15,7 @@ This plugin provide following Models:
 | >= 3.3.4 | 0.0.0 <-> 0.0.5 |
 | >= 3.4.0 | 0.0.6 <-> 1.0.6 |
 | >= 3.4.3 | 1.0.7 <-> 1.1.X |
+| >= 3.5.0 | 2.0.0           |
 
 ## Installation
 

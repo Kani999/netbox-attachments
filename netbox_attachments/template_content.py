@@ -17,16 +17,21 @@ template_extensions = []
 def create_attachments_panel(self):
     obj = self.context['object']
     app_label, model = self.model.split(".")
-    content_type_id = ContentType.objects.get(app_label=app_label,
-                                              model=model).id
+    try:
+        content_type_id = ContentType.objects.get(app_label=app_label,
+                                                  model=model).id
 
-    return self.render(
-        'netbox_attachments/netbox_attachment_panel.html',
-        extra_context={
-            'netbox_attachments': NetBoxAttachment.objects.filter(content_type_id=content_type_id,
-                                                                  object_id=obj.id),
-        }
-    )
+        return self.render(
+            'netbox_attachments/netbox_attachment_panel.html',
+            extra_context={
+                'netbox_attachments': NetBoxAttachment.objects.filter(content_type_id=content_type_id,
+                                                                      object_id=obj.id),
+            }
+        )
+    except ContentType.DoesNotExist as e:
+        logging.error(
+            f"ContentType for {app_label} {self.model} does not exist")
+        return ""
 
 
 def get_display_on(app_model_name):
@@ -119,14 +124,20 @@ try:
         model = content_type.model
         app_model_name = f"{app_label}.{model}"
 
+        try:
+            model = ContentType.objects.get(
+                app_label=app_label, model=model).model_class()
+        except ContentType.DoesNotExist as e:
+            logging.error(
+                f"ContentType for {app_label} {model} does not exist")
+            continue
+
         # Skip if app is not present in configuration
         if app_label not in plugin_settings.get("apps"):
             continue
 
         # Load prefeed display setting and model class
         display = get_display_on(app_model_name)
-        model = ContentType.objects.get(
-            app_label=app_label, model=model).model_class()
 
         # Special case - if display setting is set as additional_tab
         # https://docs.netbox.dev/en/stable/plugins/development/views/#additional-tabs
