@@ -6,9 +6,14 @@ from .models import NetBoxAttachment
 ATTACHMENT_LINK = """
 <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=record.pk %}">
     {{ record }}
-</a> (<a href="{{record.file.url}}" target="_blank">Download</a>)
+</a>
 """
 FILE_SIZE = "{{ record.size|filesizeformat }}"
+DOWNLOAD_BUTTON = """
+<a href="{{record.file.url}}" target="_blank" class="btn btn-sm btn-primary download-attachment" title="Download">
+  <i class="mdi mdi-download"></i>
+</a>
+"""
 
 
 class NetBoxAttachmentTable(NetBoxTable):
@@ -18,6 +23,7 @@ class NetBoxAttachmentTable(NetBoxTable):
     tags = columns.TagColumn()
     file = tables.FileColumn()
     size = tables.TemplateColumn(template_code=FILE_SIZE)
+    actions = columns.ActionsColumn(extra_buttons=DOWNLOAD_BUTTON)
 
     class Meta(NetBoxTable.Meta):
         model = NetBoxAttachment

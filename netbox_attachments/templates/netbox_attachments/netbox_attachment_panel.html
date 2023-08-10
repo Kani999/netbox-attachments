@@ -15,17 +15,24 @@
                     {% for attachment in netbox_attachments %}
                         <tr{% if not attachment.size %} class="table-danger"{% endif %}>
                             <td>
-                                <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=attachment.pk %}">{{ attachment }}</a> (<a href="{{ attachment.file.url }}" target="_blank">Download</a>)
+                                <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=attachment.pk %}">{{ attachment }}</a>
                             </td>
                             <td>{{ attachment.comments }}</td>
                             <td>{{ attachment.size|filesizeformat }}</td>
                             <td>{{ attachment.created }}</td>
                             <td class="text-end noprint">
-                                <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=attachment.pk %}?return_url={{ request.path }}"
+				<a href="{{attachment.file.url}}"
+		                   target="_blank"
+				   class="btn btn-sm btn-primary download-attachment"
+				   title="Download">
+                                    <i class="mdi mdi-download"></i>
+                                </a>
+				<a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=attachment.pk %}?return_url={{ request.path }}"
                                    class="btn btn-info btn-sm lh-1"
                                    title="Detail">
                                     <i class="mdi mdi-information-outline" aria-hidden="true"></i>
                                 </a>
+
                                 <a href="{% url 'plugins:netbox_attachments:netboxattachment_edit' pk=attachment.pk %}?return_url={{ request.path }}"
                                    class="btn btn-warning btn-sm lh-1"
                                    title="Edit Attachment">
