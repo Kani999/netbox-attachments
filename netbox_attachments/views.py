@@ -27,10 +27,10 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
     def alter_object(self, instance, request, args, kwargs):
         if not instance.pk:
             # Assign the parent object based on URL kwargs
-            content_type = get_object_or_404(
+            instance.content_type = get_object_or_404(
                 ContentType, pk=request.GET.get('content_type'))
-            instance.parent = get_object_or_404(
-                content_type.model_class(), pk=request.GET.get('object_id'))
+            instance.object_id = request.GET.get('object_id')
+
         return instance
 
     def get_extra_addanother_params(self, request):
