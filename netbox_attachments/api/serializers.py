@@ -43,6 +43,9 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
 
     #@swagger_serializer_method(serializer_or_field=serializers.JSONField)
     def get_parent(self, obj):
-        serializer = get_serializer_for_model(
-            obj.parent, prefix=NESTED_SERIALIZER_PREFIX)
-        return serializer(obj.parent, context={'request': self.context['request']}).data
+        if obj.parent:
+            serializer = get_serializer_for_model(
+                obj.parent, prefix=NESTED_SERIALIZER_PREFIX)
+            return serializer(obj.parent, context={'request': self.context['request']}).data
+        else:
+            return None
