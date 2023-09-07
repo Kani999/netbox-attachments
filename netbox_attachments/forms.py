@@ -14,13 +14,14 @@ class NetBoxAttachmentForm(NetBoxModelForm):
     class Meta:
         model = NetBoxAttachment
         fields = [
-            'name', 'file', 'comments', 'tags',
+            'name', 'description', 'file', 'comments', 'tags',
         ]
 
 
 class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
     model = NetBoxAttachment
     name = forms.CharField(required=False)
+    description = forms.CharField(required=False)
     content_type_id = DynamicModelMultipleChoiceField(
         queryset=ContentType.objects.all(),
         required=False,

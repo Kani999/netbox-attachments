@@ -1,14 +1,14 @@
-from django.contrib.contenttypes.fields import GenericForeignKey
+import os
+
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.urls import reverse
-from netbox.models import NetBoxModel
-from utilities.querysets import RestrictedQuerySet
-from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.core.exceptions import ObjectDoesNotExist
-
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+from netbox.models import NetBoxModel
+from utilities.querysets import RestrictedQuerySet
 
 from .utils import attachment_upload
 
@@ -35,6 +35,11 @@ class NetBoxAttachment(NetBoxModel):
         max_length=254,
         blank=True
     )
+    description = models.CharField(
+        verbose_name=_('description'),
+        max_length=200,
+        blank=True
+    )
     comments = models.TextField(
         blank=True
     )
@@ -51,8 +56,12 @@ class NetBoxAttachment(NetBoxModel):
     def __str__(self):
         if self.name:
             return self.name
-        filename = self.file.name.rsplit('/', 1)[-1]
-        return filename.split('_', 2)[2]
+
+        return self.filename
+
+    @property
+    def filename(self):
+        return os.path.basename(self.file.name)
 
     @property
     def parent(self):
@@ -101,4 +110,5 @@ class NetBoxAttachment(NetBoxModel):
         # As you don't have generic relation you should manually
         # find related actitities
         ctype = ContentType.objects.get_for_model(instance)
-        NetBoxAttachment.objects.filter(content_type=ctype, object_id=instance.pk).delete()
+        NetBoxAttachment.objects.filter(
+            content_type=ctype, object_id=instance.pk).delete()

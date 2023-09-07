@@ -7,5 +7,6 @@ class NetBoxAttachmentIndex(SearchIndex):
     model = NetBoxAttachment
     fields = (
         ('name', 100),
+        ('description', 200),
         ('comments', 5000),
     )
