@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext_lazy as _
 
 
 from .utils import attachment_upload
@@ -33,6 +34,11 @@ class NetBoxAttachment(NetBoxModel):
     )
     name = models.CharField(
         max_length=254,
+        blank=True
+    )
+    description = models.CharField(
+        verbose_name=_('description'),
+        max_length=200,
         blank=True
     )
     comments = models.TextField(

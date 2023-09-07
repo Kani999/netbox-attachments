@@ -34,9 +34,9 @@ class NetBoxAttachmentTable(NetBoxTable):
 
     class Meta(NetBoxTable.Meta):
         model = NetBoxAttachment
-        fields = ('pk', 'id', 'name', 'parent', 'content_type', 'object_id', 'file',
+        fields = ('pk', 'id', 'name', 'description', 'parent', 'content_type', 'object_id', 'file',
                   'size', 'comments', 'actions', 'created', 'last_updated', 'tags')
-        default_columns = ('id', 'name', 'parent',
+        default_columns = ('id', 'name', 'description', 'parent',
                            'content_type', 'object_id', 'tags')
         row_attrs = {
             'class': get_missing_parent_row_class,
