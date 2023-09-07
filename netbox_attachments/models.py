@@ -4,6 +4,11 @@ from django.db import models
 from django.urls import reverse
 from netbox.models import NetBoxModel
 from utilities.querysets import RestrictedQuerySet
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from .utils import attachment_upload
 
@@ -17,10 +22,6 @@ class NetBoxAttachment(NetBoxModel):
         on_delete=models.CASCADE
     )
     object_id = models.PositiveBigIntegerField()
-    parent = GenericForeignKey(
-        ct_field='content_type',
-        fk_field='object_id'
-    )
     file = models.FileField(
         upload_to=attachment_upload,
     )
@@ -53,6 +54,19 @@ class NetBoxAttachment(NetBoxModel):
         filename = self.file.name.rsplit('/', 1)[-1]
         return filename.split('_', 2)[2]
 
+    @property
+    def parent(self):
+        if self.content_type.model_class() is None:
+            # Model for the content type does not exists
+            # Model was probably deleted or uninstalled -> parent object cannot be found
+            return None
+
+        try:
+            return self.content_type.get_object_for_this_type(id=self.object_id)
+        except ObjectDoesNotExist:
+            # Object for the content type Model does not exists
+            return None
+
     def get_absolute_url(self):
         return reverse('plugins:netbox_attachments:netboxattachment', args=[self.pk])
 
@@ -80,3 +94,11 @@ class NetBoxAttachment(NetBoxModel):
         objectchange = super().to_objectchange(action)
         objectchange.related_object = self.parent
         return objectchange
+
+    @receiver(pre_delete)
+    def pre_delete_receiver(sender, instance, **kwargs):
+        # code that delete the related objects
+        # As you don't have generic relation you should manually
+        # find related actitities
+        ctype = ContentType.objects.get_for_model(instance)
+        NetBoxAttachment.objects.filter(content_type=ctype, object_id=instance.pk).delete()

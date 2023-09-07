@@ -16,10 +16,17 @@ DOWNLOAD_BUTTON = """
 """
 
 
+def get_missing_parent_row_class(record):
+    if not record.parent:
+        return 'danger'
+    else:
+        return ''
+
+
 class NetBoxAttachmentTable(NetBoxTable):
     name = tables.TemplateColumn(template_code=ATTACHMENT_LINK)
     content_type = columns.ContentTypeColumn()
-    parent = tables.RelatedLinkColumn()
+    parent = tables.RelatedLinkColumn(orderable=False)
     tags = columns.TagColumn()
     file = tables.FileColumn()
     size = tables.TemplateColumn(template_code=FILE_SIZE)
@@ -31,3 +38,6 @@ class NetBoxAttachmentTable(NetBoxTable):
                   'size', 'comments', 'actions', 'created', 'last_updated', 'tags')
         default_columns = ('id', 'name', 'parent',
                            'content_type', 'object_id', 'tags')
+        row_attrs = {
+            'class': get_missing_parent_row_class,
+        }
