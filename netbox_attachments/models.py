@@ -4,6 +4,10 @@ from django.db import models
 from django.urls import reverse
 from netbox.models import NetBoxModel
 from utilities.querysets import RestrictedQuerySet
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
 
 from .utils import attachment_upload
 
@@ -80,3 +84,11 @@ class NetBoxAttachment(NetBoxModel):
         objectchange = super().to_objectchange(action)
         objectchange.related_object = self.parent
         return objectchange
+
+    @receiver(pre_delete)
+    def pre_delete_receiver(sender, instance,**kwargs):
+        # code that delete the related objects
+        # As you don't have generic relation you should manually
+        # find related actitities
+        ctype = ContentType.objects.get_for_model(instance)
+        NetBoxAttachment.objects.filter(content_type=ctype, object_id=instance.pk).delete()
