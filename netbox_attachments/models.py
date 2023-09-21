@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from netbox.models import NetBoxModel
 from utilities.querysets import RestrictedQuerySet
+import numbers
 
 from .utils import attachment_upload
 
@@ -109,6 +110,10 @@ class NetBoxAttachment(NetBoxModel):
         # code that delete the related objects
         # As you don't have generic relation you should manually
         # find related actitities
-        ctype = ContentType.objects.get_for_model(instance)
-        NetBoxAttachment.objects.filter(
-            content_type=ctype, object_id=instance.pk).delete()
+        
+        # Workaround: only run signals on Models where PK is Integral
+        # https://github.com/Kani999/netbox-attachments/issues/44        
+        if isinstance(instance.pk, numbers.Integral):
+            ctype = ContentType.objects.get_for_model(instance)
+            NetBoxAttachment.objects.filter(
+                content_type=ctype, object_id=instance.pk).delete()
