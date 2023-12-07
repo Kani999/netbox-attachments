@@ -1,14 +1,23 @@
-def attachment_upload(instance, filename):
-    """
-    Return a path for uploading file attchments.
-    """
-    path = 'netbox-attachments/'
+from pathlib import Path
 
-    # Rename the file to the provided name, if any. Attempt to preserve the file extension.
-    extension = filename.rsplit('.')[-1].lower()
-    if instance.name:
-        filename = '.'.join([instance.name, extension])
+def attachment_upload(instance, filename: str) -> str:
+    """
+    Return a path for uploading file attachments.
+    """
+    base_path = Path("netbox-attachments")
+    # instance path example: netbox-attachments/virtual_machine/42
+    instance_path = base_path / instance.content_type.name / str(instance.object_id)
+    filename_suffix = Path(filename).suffix
+
+    # rename the file to the provided name, if any. attempt to preserve the file extension.
+    if instance.name and Path(instance.name).suffix == filename_suffix:
+        # provided name already has same extension
+        filepath = instance_path / instance.name
     elif instance.name:
-        filename = instance.name
+        # no extension in name. adding it
+        filepath = instance_path / (instance.name + filename_suffix)
+    else:
+        # no name provided. using default filename
+        filepath = instance_path / filename
 
-    return '{}{}_{}_{}'.format(path, instance.content_type.name, instance.object_id, filename)
+    return str(filepath)
