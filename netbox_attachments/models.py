@@ -94,10 +94,17 @@ class NetBoxAttachment(NetBoxModel):
         self.file.name = _name
 
     def save(self, *args, **kwargs):
-        if self.file:
-            if not self.name:
+        self.size = self.file.size
+
+        if not self.file:
+            return super().save(*args, **kwargs)
+
+        if not self.name:
+            if self._state.adding == True:
                 self.name = self.file.name.rsplit('/', 1)[-1]
-            self.size = self.file.size
+            else:
+                self.name = self.filename.split('_', 2)[2]
+
         super().save(*args, **kwargs)
 
     def to_objectchange(self, action):
