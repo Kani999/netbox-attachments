@@ -1,17 +1,14 @@
 import django_filters
 from django.db.models import Q
 from extras.filters import TagFilter
-from netbox.filtersets import BaseFilterSet
+from netbox.filtersets import NetBoxModelFilterSet
 from utilities.filters import ContentTypeFilter
 
 from .models import NetBoxAttachment
 
 
-class NetBoxAttachmentFilterSet(BaseFilterSet):
-    q = django_filters.CharFilter(
-        method='search',
-        label='Search',
-    )
+class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):
+    q = django_filters.CharFilter(method='search', label='Search')
     created = django_filters.DateTimeFilter()
     content_type = ContentTypeFilter()
     name = django_filters.CharFilter(lookup_expr="icontains")
@@ -26,6 +23,5 @@ class NetBoxAttachmentFilterSet(BaseFilterSet):
         if not value.strip():
             return queryset
 
-        name_filter = Q(name__icontains=value)
-        description_filter = Q(description__icontains=value)
-        return queryset.filter(name_filter | description_filter)
+        filters = Q(name__icontains=value) | Q(description__icontains=value)
+        return queryset.filter(filters)
