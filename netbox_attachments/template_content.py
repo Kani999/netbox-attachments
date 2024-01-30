@@ -6,6 +6,7 @@ from django.db.utils import OperationalError
 from extras.plugins import PluginTemplateExtension
 from netbox.views import generic
 from utilities.views import ViewTab, register_model_view
+from netbox.context import current_request
 
 from . import filtersets, models, tables
 from .models import NetBoxAttachment
@@ -16,6 +17,7 @@ template_extensions = []
 
 def create_attachments_panel(self):
     obj = self.context['object']
+    request = self.context['request']
     app_label, model = self.model.split(".")
     try:
         content_type_id = ContentType.objects.get(app_label=app_label,
@@ -25,7 +27,7 @@ def create_attachments_panel(self):
             'netbox_attachments/netbox_attachment_panel.html',
             extra_context={
                 'netbox_attachments': NetBoxAttachment.objects.filter(content_type_id=content_type_id,
-                                                                      object_id=obj.id),
+                                                                      object_id=obj.id).restrict(request.user, 'view'),
             }
         )
     except ContentType.DoesNotExist as e:
@@ -95,7 +97,7 @@ def create_tab_view(model, base_template_name="generic/object.html"):
             badge=lambda obj: models.NetBoxAttachment.objects.filter(
                 content_type=ContentType.objects.get_for_model(obj),
                 object_id=obj.id,
-            ).count(),
+            ).restrict(current_request.get().user, 'view').count(),
             hide_if_empty=False,
         )
 
@@ -103,13 +105,13 @@ def create_tab_view(model, base_template_name="generic/object.html"):
             childrens = self.child_model.objects.filter(
                 content_type=ContentType.objects.get_for_model(parent),
                 object_id=parent.id,
-            )
+            ).restrict(request.user, 'view')
             return childrens
 
         def get_extra_context(self, request, instance):
             data = {
                 "base_template_name": base_template_name,
-                "netbox_attachments": self.child_model.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id,)
+                "netbox_attachments": self.child_model.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id,).restrict(request.user, 'view')
             }
             return data
 
