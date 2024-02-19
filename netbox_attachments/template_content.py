@@ -99,6 +99,7 @@ def create_tab_view(model, base_template_name="generic/object.html"):
                 object_id=obj.id,
             ).restrict(current_request.get().user, 'view').count(),
             hide_if_empty=False,
+            permission = "netbox_attachments.view_netboxattachment"
         )
 
         def get_children(self, request, parent):
