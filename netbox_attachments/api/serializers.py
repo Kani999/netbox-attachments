@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-#from drf_yasg.utils import swagger_serializer_method
+# from drf_yasg.utils import swagger_serializer_method
 from netbox.api.fields import ContentTypeField
 from netbox.api.serializers import NetBoxModelSerializer
 from netbox.constants import NESTED_SERIALIZER_PREFIX
@@ -23,6 +23,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
         fields = [
             'id', 'url', 'display', 'content_type', 'object_id', 'parent', 'name', 'description', 'file', 'created', 'last_updated', 'comments',
         ]
+        brief_fields = ('id', 'url', 'display', 'name', 'description', 'file')
 
     def validate(self, data):
         # Validate that the parent object exists
@@ -41,7 +42,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
 
         return data
 
-    #@swagger_serializer_method(serializer_or_field=serializers.JSONField)
+    # @swagger_serializer_method(serializer_or_field=serializers.JSONField)
     def get_parent(self, obj):
         if obj.parent:
             serializer = get_serializer_for_model(

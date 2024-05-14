@@ -1,4 +1,4 @@
-from extras.plugins import PluginMenu, PluginMenuItem
+from netbox.plugins import PluginMenu, PluginMenuItem
 
 menu = PluginMenu(
     label='Attachments',

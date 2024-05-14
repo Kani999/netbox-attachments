@@ -3,7 +3,8 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.utils import OperationalError
-from extras.plugins import PluginTemplateExtension
+from netbox.plugins import PluginTemplateExtension
+
 from netbox.views import generic
 from utilities.views import ViewTab, register_model_view
 from netbox.context import current_request
@@ -99,7 +100,7 @@ def create_tab_view(model, base_template_name="generic/object.html"):
                 object_id=obj.id,
             ).restrict(current_request.get().user, 'view').count(),
             hide_if_empty=False,
-            permission = "netbox_attachments.view_netboxattachment"
+            permission="netbox_attachments.view_netboxattachment"
         )
 
         def get_children(self, request, parent):
