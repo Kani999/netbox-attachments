@@ -11,7 +11,12 @@ class NetBoxAttachmentView(generic.ObjectView):
 
 
 class NetBoxAttachmentListView(generic.ObjectListView):
-    actions = ['export']
+    actions = {
+        'import': {'add'},
+        'export': set(),
+        'bulk_edit': {'change'},
+        'bulk_delete': {'delete'},
+    }
     queryset = models.NetBoxAttachment.objects.all()
     table = tables.NetBoxAttachmentTable
     filterset = filtersets.NetBoxAttachmentFilterSet

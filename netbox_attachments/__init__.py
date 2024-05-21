@@ -1,5 +1,4 @@
-from extras.plugins import PluginConfig
-
+from netbox.plugins import PluginConfig
 from .version import __version__
 
 
@@ -16,8 +15,8 @@ class NetBoxAttachmentsConfig(PluginConfig):
         'display_setting': {}
     }
     required_settings = []
-    min_version = '3.5.0'
-    max_version = '3.7.99'
+    min_version = '4.0.0'
+    max_version = '4.0.99'
 
 
 config = NetBoxAttachmentsConfig
