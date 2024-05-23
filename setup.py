@@ -1,17 +1,14 @@
 import codecs
 import os.path
-
 from setuptools import find_packages, setup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-
 def read(rel_path):
     here = os.path.abspath(os.path.dirname(__file__))
     with codecs.open(os.path.join(here, rel_path), 'r') as fp:
         return fp.read()
-
 
 def get_version(rel_path):
     for line in read(rel_path).splitlines():
@@ -21,7 +18,6 @@ def get_version(rel_path):
     else:
         raise RuntimeError("Unable to find version string.")
 
-
 setup(
     name='netbox-attachments',
     version=get_version('netbox_attachments/version.py'),
@@ -30,14 +26,24 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/Kani999/netbox-attachments',
     author="Jan Krupa",
+    #author_email='your.email@example.com',  # Add your email here
+    license='MIT',  # Specify the license
     install_requires=[],
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
     python_requires='>=3.9',
     classifiers=[
+        'Development Status :: 4 - Beta',  # Update as necessary
+        'Intended Audience :: Developers',
         'Framework :: Django',
+        'Framework :: Django :: 3.2',  # Specify the Django version if known
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Operating System :: OS Independent',
     ],
     keywords=['netbox', 'netbox-plugin'],
 )
+

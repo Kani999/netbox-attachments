@@ -1,2 +1,3 @@
-include README.md
 recursive-include netbox_attachments/templates *
+include LICENSE
+include README.md
