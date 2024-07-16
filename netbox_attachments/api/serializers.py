@@ -1,4 +1,4 @@
-from django.contrib.contenttypes.models import ContentType
+from core.models.contenttypes import ObjectType
 from django.core.exceptions import ObjectDoesNotExist
 from netbox.api.fields import ContentTypeField
 from netbox.api.serializers import NetBoxModelSerializer
@@ -12,7 +12,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="plugins-api:netbox_attachments-api:netboxattachment-detail"
     )
-    content_type = ContentTypeField(queryset=ContentType.objects.all())
+    object_type = ContentTypeField(queryset=ObjectType.objects.all())
     parent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -21,7 +21,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
             "id",
             "url",
             "display",
-            "content_type",
+            "object_type",
             "object_id",
             "parent",
             "name",
@@ -36,12 +36,12 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
     def validate(self, data):
         # Validate that the parent object exists
         try:
-            if "content_type" in data and "object_id" in data:
-                data["content_type"].get_object_for_this_type(id=data["object_id"])
+            if "object_type" in data and "object_id" in data:
+                data["object_type"].get_object_for_this_type(id=data["object_id"])
         except ObjectDoesNotExist:
             raise serializers.ValidationError(
                 "Invalid parent object: {} ID {}".format(
-                    data["content_type"], data["object_id"]
+                    data["object_type"], data["object_id"]
                 )
             )
 

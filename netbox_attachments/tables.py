@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from netbox.tables import NetBoxTable, columns
 
-from .models import NetBoxAttachment
+from netbox_attachments.models import NetBoxAttachment
 
 ATTACHMENT_LINK = """
 <a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=record.pk %}">
@@ -18,15 +18,17 @@ DOWNLOAD_BUTTON = """
 
 def get_missing_parent_row_class(record):
     if not record.parent:
-        return 'danger'
+        return "danger"
     else:
-        return ''
+        return ""
 
 
 class NetBoxAttachmentTable(NetBoxTable):
     name = tables.TemplateColumn(template_code=ATTACHMENT_LINK)
-    content_type = columns.ContentTypeColumn()
-    parent = tables.RelatedLinkColumn(orderable=False)
+    object_type = columns.ContentTypeColumn(
+        verbose_name=("Object Type"),
+    )
+    parent = tables.Column(verbose_name=("Parent"), linkify=True)
     tags = columns.TagColumn()
     file = tables.FileColumn()
     size = tables.TemplateColumn(template_code=FILE_SIZE)
@@ -34,10 +36,31 @@ class NetBoxAttachmentTable(NetBoxTable):
 
     class Meta(NetBoxTable.Meta):
         model = NetBoxAttachment
-        fields = ('pk', 'id', 'name', 'description', 'parent', 'content_type', 'object_id', 'file',
-                  'size', 'comments', 'actions', 'created', 'last_updated', 'tags')
-        default_columns = ('id', 'name', 'description', 'parent',
-                           'content_type', 'object_id', 'tags')
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "description",
+            "parent",
+            "object_type",
+            "object_id",
+            "file",
+            "size",
+            "comments",
+            "actions",
+            "created",
+            "last_updated",
+            "tags",
+        )
+        default_columns = (
+            "id",
+            "name",
+            "description",
+            "parent",
+            "object_type",
+            "object_id",
+            "tags",
+        )
         row_attrs = {
-            'class': get_missing_parent_row_class,
+            "class": get_missing_parent_row_class,
         }

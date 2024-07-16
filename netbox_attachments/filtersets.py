@@ -8,16 +8,16 @@ from .models import NetBoxAttachment
 
 
 class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):
-    q = django_filters.CharFilter(method='search', label='Search')
+    q = django_filters.CharFilter(method="search", label="Search")
     created = django_filters.DateTimeFilter()
-    content_type = ContentTypeFilter()
+    object_type = ContentTypeFilter()
     name = django_filters.CharFilter(lookup_expr="icontains")
     description = django_filters.CharFilter(lookup_expr="icontains")
     tag = TagFilter()
 
     class Meta:
         model = NetBoxAttachment
-        fields = ['id', 'content_type_id', 'object_id', 'name', 'description']
+        fields = ["id", "object_type_id", "object_id", "name", "description"]
 
     def search(self, queryset, name, value):
         if not value.strip():
