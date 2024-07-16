@@ -1,7 +1,7 @@
 from django.urls import path
 from netbox.views.generic import ObjectChangeLogView
 
-from . import models, views
+from netbox_attachments import models, views
 
 urlpatterns = (
     # Files

@@ -1,6 +1,6 @@
 from netbox.api.routers import NetBoxRouter
 
-from . import views
+from netbox_attachments.api import views
 
 app_name = 'netbox_attachments'
 router = NetBoxRouter()

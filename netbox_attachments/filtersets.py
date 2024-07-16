@@ -4,7 +4,7 @@ from extras.filters import TagFilter
 from netbox.filtersets import NetBoxModelFilterSet
 from utilities.filters import ContentTypeFilter
 
-from .models import NetBoxAttachment
+from netbox_attachments.models import NetBoxAttachment
 
 
 class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):

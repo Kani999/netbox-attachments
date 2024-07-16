@@ -1,8 +1,8 @@
 from netbox.api.metadata import ContentTypeMetadata
 from netbox.api.viewsets import NetBoxModelViewSet
 
-from .. import filtersets, models
-from .serializers import NetBoxAttachmentSerializer
+from netbox_attachments import filtersets, models
+from netbox_attachments.api.serializers import NetBoxAttachmentSerializer
 
 
 class NetBoxAttachmentViewSet(NetBoxModelViewSet):

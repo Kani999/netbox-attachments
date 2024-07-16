@@ -1,5 +1,5 @@
 from netbox.search import SearchIndex, register_search
-from .models import NetBoxAttachment
+from netbox_attachments.models import NetBoxAttachment
 
 
 @register_search
