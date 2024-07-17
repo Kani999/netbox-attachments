@@ -1,39 +1,37 @@
 import logging
 
+from core.models.contenttypes import ObjectType
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.db.utils import OperationalError
+from netbox.context import current_request
 from netbox.plugins import PluginTemplateExtension
-
 from netbox.views import generic
 from utilities.views import ViewTab, register_model_view
-from netbox.context import current_request
 
-from . import filtersets, models, tables
-from .models import NetBoxAttachment
+from netbox_attachments import filtersets, tables
+from netbox_attachments.models import NetBoxAttachment
 
-plugin_settings = settings.PLUGINS_CONFIG.get('netbox_attachments', {})
+plugin_settings = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
 template_extensions = []
 
 
 def create_attachments_panel(self):
-    obj = self.context['object']
-    request = self.context['request']
+    obj = self.context["object"]
+    request = self.context["request"]
     app_label, model = self.model.split(".")
     try:
-        content_type_id = ContentType.objects.get(app_label=app_label,
-                                                  model=model).id
+        object_type_id = ObjectType.objects.get(app_label=app_label, model=model).id
 
         return self.render(
-            'netbox_attachments/netbox_attachment_panel.html',
+            "netbox_attachments/netbox_attachment_panel.html",
             extra_context={
-                'netbox_attachments': NetBoxAttachment.objects.filter(content_type_id=content_type_id,
-                                                                      object_id=obj.id).restrict(request.user, 'view'),
-            }
+                "netbox_attachments": NetBoxAttachment.objects.filter(
+                    object_type_id=object_type_id, object_id=obj.id
+                ).restrict(request.user, "view"),
+            },
         )
-    except ContentType.DoesNotExist as e:
-        logging.error(
-            f"ContentType for {app_label} {self.model} does not exist")
+    except ObjectType.DoesNotExist as e:
+        logging.error(f"ObjectType for {app_label} {self.model} does not exist")
         return ""
 
 
@@ -50,7 +48,7 @@ def get_display_on(app_model_name):
     display_on = plugin_settings.get("display_default", "additional_tab")
 
     # Find configured display setting or return default
-    if display_setting := plugin_settings.get('display_setting'):
+    if display_setting := plugin_settings.get("display_setting"):
         display_on = display_setting.get(app_model_name, display_on)
 
     return display_on
@@ -65,11 +63,12 @@ def create_add_button(model_name):
     Returns:
         Button: Add attachment button at the top of model
     """
+
     class Button(PluginTemplateExtension):
         model = model_name
 
         def buttons(self):
-            return self.render('netbox_attachments/add_attachment_button.html')
+            return self.render("netbox_attachments/add_attachment_button.html")
 
     return Button
 
@@ -86,7 +85,7 @@ def create_tab_view(model, base_template_name="generic/object.html"):
     class View(generic.ObjectChildrenView):
         def __init__(self, *args, **kwargs):
             self.queryset = model.objects.all()
-            self.child_model = models.NetBoxAttachment
+            self.child_model = NetBoxAttachment
             self.table = tables.NetBoxAttachmentTable
             self.filterset = filtersets.NetBoxAttachmentFilterSet
             self.template_name = "netbox_attachments/generic_tab_list.html"
@@ -95,25 +94,30 @@ def create_tab_view(model, base_template_name="generic/object.html"):
         table = tables.NetBoxAttachmentTable
         tab = ViewTab(
             label="Attachments",
-            badge=lambda obj: models.NetBoxAttachment.objects.filter(
-                content_type=ContentType.objects.get_for_model(obj),
+            badge=lambda obj: NetBoxAttachment.objects.filter(
+                object_type=ObjectType.objects.get_for_model(obj),
                 object_id=obj.id,
-            ).restrict(current_request.get().user, 'view').count(),
+            )
+            .restrict(current_request.get().user, "view")
+            .count(),
             hide_if_empty=False,
-            permission="netbox_attachments.view_netboxattachment"
+            permission="netbox_attachments.view_netboxattachment",
         )
 
         def get_children(self, request, parent):
             childrens = self.child_model.objects.filter(
-                content_type=ContentType.objects.get_for_model(parent),
+                object_type=ObjectType.objects.get_for_model(parent),
                 object_id=parent.id,
-            ).restrict(request.user, 'view')
+            ).restrict(request.user, "view")
             return childrens
 
         def get_extra_context(self, request, instance):
             data = {
                 "base_template_name": base_template_name,
-                "netbox_attachments": self.child_model.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id,).restrict(request.user, 'view')
+                "netbox_attachments": self.child_model.objects.filter(
+                    object_type=ObjectType.objects.get_for_model(instance),
+                    object_id=instance.id,
+                ).restrict(request.user, "view"),
             }
             return data
 
@@ -123,17 +127,17 @@ def create_tab_view(model, base_template_name="generic/object.html"):
 # Generate plugin extension for all classes
 try:
     # Iterate over all NetBox models
-    for content_type in ContentType.objects.all():
-        app_label = content_type.app_label
-        model = content_type.model
+    for object_type in ObjectType.objects.all():
+        app_label = object_type.app_label
+        model = object_type.model
         app_model_name = f"{app_label}.{model}"
 
         try:
-            model = ContentType.objects.get(
-                app_label=app_label, model=model).model_class()
-        except ContentType.DoesNotExist as e:
-            logging.error(
-                f"ContentType for {app_label} {model} does not exist")
+            model = ObjectType.objects.get(
+                app_label=app_label, model=model
+            ).model_class()
+        except ObjectType.DoesNotExist as e:
+            logging.error(f"ObjectType for {app_label} {model} does not exist")
             continue
 
         # Skip if app is not present in configuration
@@ -154,18 +158,18 @@ try:
 
         # Otherwise create panels and tweak them to the configured location (left, right, full_width_page)
         klass_name = f"{app_label}_{model}_plugin_template_extension"
-        dynamic_klass = type(klass_name,
-                             (PluginTemplateExtension,),
-                             {"model": app_model_name,
-                              display: create_attachments_panel}
-                             )
+        dynamic_klass = type(
+            klass_name,
+            (PluginTemplateExtension,),
+            {"model": app_model_name, display: create_attachments_panel},
+        )
 
         template_extensions.append(dynamic_klass)
 except OperationalError as e:
-    logger = logging.getLogger('netbox.netbox-attachments')
+    logger = logging.getLogger("netbox.netbox-attachments")
     logger.error("Database is not ready")
     logger.debug(e)
 except Exception as e:
-    logger = logging.getLogger('netbox.netbox-attachments')
+    logger = logging.getLogger("netbox.netbox-attachments")
     logger.error("Unexpected error - netbox-attachments won't be rendered")
     logger.debug(e)
