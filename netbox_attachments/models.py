@@ -89,7 +89,7 @@ class NetBoxAttachment(NetBoxModel):
             return super().save(*args, **kwargs)
 
         if not self.name:
-            if self._state.adding == True:
+            if self._state.adding:
                 self.name = self.file.name.rsplit("/", 1)[-1]
             else:
                 self.name = self.filename.split("_", 2)[2]
