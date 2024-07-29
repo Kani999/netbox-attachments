@@ -1,6 +1,7 @@
 import logging
 
 from core.models.contenttypes import ObjectType
+from django.apps import apps
 from django.conf import settings
 from django.db.utils import OperationalError
 from netbox.context import current_request
@@ -12,7 +13,6 @@ from netbox_attachments import filtersets, tables
 from netbox_attachments.models import NetBoxAttachment
 
 plugin_settings = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
-template_extensions = []
 
 
 def create_attachments_panel(self):
@@ -30,7 +30,7 @@ def create_attachments_panel(self):
                 ).restrict(request.user, "view"),
             },
         )
-    except ObjectType.DoesNotExist as e:
+    except ObjectType.DoesNotExist:
         logging.error(f"ObjectType for {app_label} {self.model} does not exist")
         return ""
 
@@ -125,51 +125,49 @@ def create_tab_view(model, base_template_name="generic/object.html"):
 
 
 # Generate plugin extension for all classes
-try:
-    # Iterate over all NetBox models
-    for object_type in ObjectType.objects.all():
-        app_label = object_type.app_label
-        model = object_type.model
-        app_model_name = f"{app_label}.{model}"
+def get_templates_extensions():
+    template_extensions = []
 
-        try:
-            model = ObjectType.objects.get(
-                app_label=app_label, model=model
-            ).model_class()
-        except ObjectType.DoesNotExist as e:
-            logging.error(f"ObjectType for {app_label} {model} does not exist")
-            continue
+    try:
+        # Iterate over all NetBox models
+        for model in apps.get_models():
+            app_label = model._meta.app_label
+            model_name = model._meta.model_name
+            app_model_name = f"{app_label}.{model_name}"
 
-        # Skip if app is not present in configuration
-        if app_label not in plugin_settings.get("apps"):
-            continue
+            # Skip if app is not present in configuration
+            if app_label not in plugin_settings.get("apps"):
+                continue
 
-        # Load prefeed display setting and model class
-        display = get_display_on(app_model_name)
+            # Load prefeed display setting and model class
+            display = get_display_on(app_model_name)
 
-        # Special case - if display setting is set as additional_tab
-        # https://docs.netbox.dev/en/stable/plugins/development/views/#additional-tabs
-        if display == "additional_tab" and model:
-            # create add attachment button at the top of the parent view
-            template_extensions.append(create_add_button(app_model_name))
-            # add attachment tab to the parent view
-            create_tab_view(model)
-            continue
+            # Special case - if display setting is set as additional_tab
+            # https://docs.netbox.dev/en/stable/plugins/development/views/#additional-tabs
+            if display == "additional_tab" and model:
+                # create add attachment button at the top of the parent view
+                template_extensions.append(create_add_button(app_model_name))
+                # add attachment tab to the parent view
+                create_tab_view(model)
+                continue
 
-        # Otherwise create panels and tweak them to the configured location (left, right, full_width_page)
-        klass_name = f"{app_label}_{model}_plugin_template_extension"
-        dynamic_klass = type(
-            klass_name,
-            (PluginTemplateExtension,),
-            {"model": app_model_name, display: create_attachments_panel},
-        )
+            # Otherwise create panels and tweak them to the configured location (left, right, full_width_page)
+            klass_name = f"{app_label}_{model}_plugin_template_extension"
+            dynamic_klass = type(
+                klass_name,
+                (PluginTemplateExtension,),
+                {"model": app_model_name, display: create_attachments_panel},
+            )
 
-        template_extensions.append(dynamic_klass)
-except OperationalError as e:
-    logger = logging.getLogger("netbox.netbox-attachments")
-    logger.error("Database is not ready")
-    logger.debug(e)
-except Exception as e:
-    logger = logging.getLogger("netbox.netbox-attachments")
-    logger.error("Unexpected error - netbox-attachments won't be rendered")
-    logger.debug(e)
+            template_extensions.append(dynamic_klass)
+    except OperationalError as e:
+        logging.error("Database is not ready")
+        logging.debug(e)
+    except Exception as e:
+        logging.error("Unexpected error - netbox-attachments won't be rendered")
+        logging.debug(e)
+
+    return template_extensions
+
+
+template_extensions = get_templates_extensions()
