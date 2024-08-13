@@ -16,20 +16,9 @@ plugin_settings = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
 
 
 def create_attachments_panel(self):
-    obj = self.context["object"]
-    request = self.context["request"]
-    app_label, model = self.model.split(".")
+    app_label, _ = self.model.split(".")
     try:
-        object_type_id = ObjectType.objects.get(app_label=app_label, model=model).id
-
-        return self.render(
-            "netbox_attachments/netbox_attachment_panel.html",
-            extra_context={
-                "netbox_attachments": NetBoxAttachment.objects.filter(
-                    object_type_id=object_type_id, object_id=obj.id
-                ).restrict(request.user, "view"),
-            },
-        )
+        return self.render("netbox_attachments/netbox_attachment_panel.html")
     except ObjectType.DoesNotExist:
         logging.error(f"ObjectType for {app_label} {self.model} does not exist")
         return ""
@@ -73,7 +62,7 @@ def create_add_button(model_name):
     return Button
 
 
-def create_tab_view(model, base_template_name="generic/object_children.html"):
+def create_tab_view(model):
     """Creates attachment tab. Append it to the passed model
 
     Args:
@@ -110,16 +99,6 @@ def create_tab_view(model, base_template_name="generic/object_children.html"):
                 object_id=parent.id,
             ).restrict(request.user, "view")
             return childrens
-
-        def get_extra_context(self, request, instance):
-            data = {
-                "base_template_name": base_template_name,
-                "netbox_attachments": self.child_model.objects.filter(
-                    object_type=ObjectType.objects.get_for_model(instance),
-                    object_id=instance.id,
-                ).restrict(request.user, "view"),
-            }
-            return data
 
     register_model_view(model, name=name, path=path)(View)
 
