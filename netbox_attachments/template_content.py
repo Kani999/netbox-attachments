@@ -94,7 +94,11 @@ def create_tab_view(model):
         )
 
         def get_children(self, request, parent):
-            super()
+            childrens = self.child_model.objects.filter(
+                object_type=ObjectType.objects.get_for_model(parent),
+                object_id=parent.id,
+            ).restrict(request.user, "view")
+            return childrens
 
     register_model_view(model, name=name, path=path)(View)
 
