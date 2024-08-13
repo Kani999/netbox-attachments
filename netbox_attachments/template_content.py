@@ -73,7 +73,7 @@ def create_add_button(model_name):
     return Button
 
 
-def create_tab_view(model, base_template_name="generic/object.html"):
+def create_tab_view(model, base_template_name="generic/object_children.html"):
     """Creates attachment tab. Append it to the passed model
 
     Args:
