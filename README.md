@@ -35,6 +35,19 @@ Enable the plugin in `configuration.py`:
 PLUGINS = ['netbox_attachments']
 ```
 
+Create the directory for storing attachments and set the appropriate permissions:
+
+```
+mkdir -p /opt/netbox/netbox/media/netbox-attachments
+chown netbox /opt/netbox/netbox/media/netbox-attachments
+```
+
+Run database migrations for the plugin:
+
+```
+python3 manage.py migrate netbox_attachments
+```
+
 Restart NetBox and add `netbox-attachments` to your local_requirements.txt
 
 See [NetBox Documentation](https://docs.netbox.dev/en/stable/plugins/#installing-plugins) for details
