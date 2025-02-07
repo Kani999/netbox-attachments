@@ -80,7 +80,17 @@ The plugin can be customized using the following configuration options:
   - **Description**: Override the display settings for specific models.
   - **Tip**: Use the correct `app_label` and `model` names, which can be found in the API at `<your_netbox_url>/api/extras/content-types/`.
 
-> **Warning**: The `additional_tab` option does not work for plugin models.
+> ~~**Warning**: The `additional_tab` option does not work for plugin models.~~
+
+> **Note**: The `additional_tab` feature will work for plugin models if you include the following in your `urls.py`:
+>```python
+>path(
+>    "MODEL/<int:pk>/",
+>    include(get_model_urls("plugin_name", "model_name")),
+>),
+>```
+> By doing so, the system will automatically include the Changelog, Journal, and other registered tabs (such as Attachments) when `additional_tab` is enabled.
+
 
 ### Configuration Example
 
