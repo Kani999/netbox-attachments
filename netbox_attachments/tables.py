@@ -28,7 +28,7 @@ class NetBoxAttachmentTable(NetBoxTable):
     object_type = columns.ContentTypeColumn(
         verbose_name=("Object Type"),
     )
-    parent = tables.Column(verbose_name=("Parent"), linkify=True)
+    parent = tables.Column(verbose_name=("Parent"), linkify=True, orderable=False)
     tags = columns.TagColumn()
     file = tables.FileColumn()
     size = tables.TemplateColumn(template_code=FILE_SIZE)
