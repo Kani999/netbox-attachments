@@ -108,29 +108,52 @@ def get_templates_extensions():
     template_extensions = []
 
     try:
+        mode = plugin_settings.get("mode", "permissive")
+        allowed_models = plugin_settings.get("allowed_models", [])
+        apps_list = plugin_settings.get("apps", [])
+        add_button = plugin_settings.get("create_add_button", False)
+
+        # If mode is not set to restrictive or permissive, set it to permissive by default
+        if mode not in ["permissive", "restrictive"]:
+            mode = "permissive"
+
+        # If add_button is not set to True or False, set it to False by default
+        if add_button not in [True, False]:
+            add_button = False
+
         # Iterate over all NetBox models
         for model in apps.get_models():
             app_label = model._meta.app_label
             model_name = model._meta.model_name
             app_model_name = f"{app_label}.{model_name}"
 
-            # Skip if app is not present in configuration
-            if app_label not in plugin_settings.get("apps"):
-                continue
+            # In restrictive mode, only include specifically allowed models
+            if mode == "restrictive":
+                # Skip if model is not in allowed_models
+                # Example of values in allowed_models: ['dcim.device', 'ipam.vlan']
+                if app_model_name not in allowed_models:
+                    continue
+            # In permissive mode (default), include all models from allowed apps
+            else:
+                # Skip if app_label is not in apps_list
+                # Example of values in apps_list: ['dcim', 'ipam']
+                if app_label not in apps_list:
+                    continue
 
             # Load prefeed display setting and model class
             display = get_display_on(app_model_name)
 
+            # Rest of the function remains the same
             # Special case - if display setting is set as additional_tab
-            # https://docs.netbox.dev/en/stable/plugins/development/views/#additional-tabs
             if display == "additional_tab" and model:
                 # create add attachment button at the top of the parent view
-                template_extensions.append(create_add_button(app_model_name))
+                if add_button:
+                    template_extensions.append(create_add_button(app_model_name))
                 # add attachment tab to the parent view
                 create_tab_view(model)
                 continue
 
-            # Otherwise create panels and tweak them to the configured location (left, right, full_width_page)
+            # Otherwise create panels and tweak them to the configured location
             klass_name = f"{app_label}_{model}_plugin_template_extension"
             dynamic_klass = type(
                 klass_name,

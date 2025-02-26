@@ -72,6 +72,22 @@ The plugin can be customized using the following configuration options:
   - **Options**: `"left_page"`, `"right_page"`, `"full_width_page"`, `"additional_tab"`
   - **Description**: Sets the default location where attachments should be displayed in the models.
 
+- `create_add_button`:
+  - **Type**: Boolean
+  - **Default**: `True`
+  - **Description**: Specific only to `additional_tab` display setting. If set to True, it will create an "Add Attachment" button at the top of the parent view.
+
+- `mode`:
+  - **Type**: String
+  - **Default**: `"permissive"`
+  - **Options**: `"permissive"`, `"restrictive"`
+  - **Description**: Determines the attachment access mode. In permissive mode, attachments are allowed for all models in the configured apps. In restrictive mode, only models explicitly specified in `allowed_models` can have attachments.
+
+- `allowed_models`:
+  - **Type**: List
+  - **Default**: `[]`
+  - **Description**: When in restrictive mode, only models specified in this list will be allowed to have attachments. Format should be `app_label.model_name`.
+
 - `display_setting`:
   - **Type**: Dictionary
   - **Default**: `{}`
@@ -101,6 +117,9 @@ PLUGINS_CONFIG = {
     'netbox_attachments': {
         'apps': ['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless', 'inventory_monitor'],
         'display_default': "right_page",
+        'create_add_button': True,
+        'mode': 'restrictive',
+        'allowed_models': ['dcim.device', 'ipam.prefix', 'ipam.ipaddress'],
         'display_setting': {
             'ipam.vlan': "left_page",
             'dcim.device': "full_width_page",
