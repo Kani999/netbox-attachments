@@ -11,12 +11,18 @@ class NetBoxAttachmentsConfig(PluginConfig):
     author = "Jan Krupa"
     base_url = "netbox-attachments"
     default_settings = {
-        "apps": ["dcim", "ipam", "circuits", "tenancy", "virtualization", "wireless"],
+        "applied_scope": "app",  # Changed from 'mode' - options: 'app' or 'model'
+        "scope_filter": [
+            "dcim",
+            "ipam",
+            "circuits",
+            "tenancy",
+            "virtualization",
+            "wireless",
+        ],  # Merged from 'apps' and 'allowed_models'
         "display_default": "additional_tab",
-        "create_add_button": True,  # New setting: specific only to `additional_tab` display setting. If set to True, it will create an "Add Attachment" button at the top of the parent view
+        "create_add_button": True,
         "display_setting": {},
-        "mode": "permissive",  # New setting: 'permissive' or 'restrictive'
-        "allowed_models": [],  # New setting: specific models to allow in restrictive mode
     }
     required_settings = []
     min_version = "4.2.0"
