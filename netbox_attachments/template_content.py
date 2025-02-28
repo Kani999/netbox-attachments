@@ -1,8 +1,10 @@
 import logging
+from typing import List, Type
 
 from core.models.contenttypes import ObjectType
 from django.apps import apps
 from django.conf import settings
+from django.db.models import Model
 from django.db.utils import OperationalError
 from netbox.context import current_request
 from netbox.plugins import PluginTemplateExtension
@@ -12,75 +14,84 @@ from utilities.views import ViewTab, register_model_view
 from netbox_attachments import filtersets, tables
 from netbox_attachments.models import NetBoxAttachment
 
-plugin_settings = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
+logger = logging.getLogger(__name__)
+PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
 
 
-def create_attachments_panel(self):
+def render_attachment_panel(self) -> str:
+    """
+    Renders the attachment panel template for a model.
+
+    Args:
+        self: The plugin template extension instance
+
+    Returns:
+        str: Rendered HTML content or empty string if rendering fails
+    """
     app_label, _ = self.model.split(".")
     try:
         return self.render("netbox_attachments/netbox_attachment_panel.html")
     except ObjectType.DoesNotExist:
-        logging.error(f"ObjectType for {app_label} {self.model} does not exist")
+        logger.error(f"ObjectType for {app_label} {self.model} does not exist")
         return ""
 
 
-def get_display_on(app_model_name):
-    """Get prefered display setting (left_page, right_page, full_width_page, additional_tab) for attachment panel
+def get_display_preference(app_model_name: str) -> str:
+    """
+    Get preferred display setting for attachment panel.
 
     Args:
-        app_model_name (str): <app_label>.<model> = (dcim.device, ipam.vlan, ...)
+        app_model_name: String in format "<app_label>.<model>" (e.g., "dcim.device")
 
     Returns:
-        str: Configured display setting or default
+        str: Display setting value (left_page, right_page, full_width_page, or additional_tab)
     """
-    # set default
-    display_on = plugin_settings.get("display_default", "additional_tab")
+    # Set default from plugin settings or fallback to additional_tab
+    default_display = PLUGIN_SETTINGS.get("display_default", "additional_tab")
 
     # Find configured display setting or return default
-    if display_setting := plugin_settings.get("display_setting"):
-        display_on = display_setting.get(app_model_name, display_on)
-
-    return display_on
+    display_settings = PLUGIN_SETTINGS.get("display_setting", {})
+    return display_settings.get(app_model_name, default_display)
 
 
-def create_add_button(model_name):
-    """Creates add attachment button
+def create_add_attachment_button(model_name: str) -> Type[PluginTemplateExtension]:
+    """
+    Creates an 'add attachment' button extension for a model.
 
     Args:
-        model_name (str): <app_label>.<model> = (dcim.device, ipam.vlan, ...)
+        model_name: String in format "<app_label>.<model>" (e.g., "dcim.device")
 
     Returns:
-        Button: Add attachment button at the top of model
+        Type[PluginTemplateExtension]: Button extension class
     """
 
-    class Button(PluginTemplateExtension):
+    class AddAttachmentButton(PluginTemplateExtension):
         model = model_name
 
         def buttons(self):
             return self.render("netbox_attachments/add_attachment_button.html")
 
-    return Button
+    return AddAttachmentButton
 
 
-def create_tab_view(model):
-    """Creates attachment tab. Append it to the passed model
+def register_attachment_tab_view(model: Type[Model]) -> None:
+    """
+    Creates and registers an attachment tab view for a model.
 
     Args:
-        model (Object): Model representation
+        model: Django model class to add the tab view to
     """
-    name = f"{model._meta.model_name}-attachment_list"
-    path = f"{model._meta.model_name}-attachment_list"
+    model_name = model._meta.model_name
+    view_name = f"{model_name}-attachment_list"
+    view_path = view_name  # Path matches the name
 
-    class View(generic.ObjectChildrenView):
-        def __init__(self, *args, **kwargs):
-            self.queryset = model.objects.all()
-            self.child_model = NetBoxAttachment
-            self.table = tables.NetBoxAttachmentTable
-            self.filterset = filtersets.NetBoxAttachmentFilterSet
-            self.template_name = "netbox_attachments/generic_tab_list.html"
-            super().__init__(*args, **kwargs)
-
+    class AttachmentTabView(generic.ObjectChildrenView):
+        queryset = model.objects.all()
+        child_model = NetBoxAttachment
         table = tables.NetBoxAttachmentTable
+        filterset = filtersets.NetBoxAttachmentFilterSet
+        template_name = "netbox_attachments/generic_tab_list.html"
+
         tab = ViewTab(
             label="Attachments",
             badge=lambda obj: NetBoxAttachment.objects.filter(
@@ -94,59 +105,85 @@ def create_tab_view(model):
         )
 
         def get_children(self, request, parent):
-            childrens = self.child_model.objects.filter(
+            return NetBoxAttachment.objects.filter(
                 object_type=ObjectType.objects.get_for_model(parent),
                 object_id=parent.id,
             ).restrict(request.user, "view")
-            return childrens
 
-    register_model_view(model, name=name, path=path)(View)
+    register_model_view(model, name=view_name, path=view_path)(AttachmentTabView)
 
 
-# Generate plugin extension for all classes
-def get_templates_extensions():
-    template_extensions = []
+def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
+    """
+    Generate plugin template extensions for all eligible models based on plugin settings.
+
+    Returns:
+        List[Type[PluginTemplateExtension]]: List of template extension classes
+    """
+    extensions = []
 
     try:
-        # Iterate over all NetBox models
+        # Extract plugin settings with defaults
+        applied_scope = PLUGIN_SETTINGS.get("applied_scope", "app")
+        scope_filter = PLUGIN_SETTINGS.get("scope_filter", [])
+        should_add_button = PLUGIN_SETTINGS.get("create_add_button", False)
+
+        # Validate settings
+        if applied_scope not in ["app", "model"]:
+            logger.warning(
+                f"Invalid applied_scope '{applied_scope}', defaulting to 'app'"
+            )
+            applied_scope = "app"
+
+        if not isinstance(should_add_button, bool):
+            logger.warning("Invalid create_add_button value, defaulting to False")
+            should_add_button = False
+
+        # Process each model
         for model in apps.get_models():
             app_label = model._meta.app_label
             model_name = model._meta.model_name
             app_model_name = f"{app_label}.{model_name}"
 
-            # Skip if app is not present in configuration
-            if app_label not in plugin_settings.get("apps"):
+            # Check if model should be included based on scope
+            if applied_scope == "model":
+                # Enhanced logic: allow both specific models and entire apps
+                if app_model_name not in scope_filter and app_label not in scope_filter:
+                    continue
+            elif applied_scope == "app" and app_label not in scope_filter:
                 continue
 
-            # Load prefeed display setting and model class
-            display = get_display_on(app_model_name)
+            # Get display preference for this model
+            display_preference = get_display_preference(app_model_name)
 
-            # Special case - if display setting is set as additional_tab
-            # https://docs.netbox.dev/en/stable/plugins/development/views/#additional-tabs
-            if display == "additional_tab" and model:
-                # create add attachment button at the top of the parent view
-                template_extensions.append(create_add_button(app_model_name))
-                # add attachment tab to the parent view
-                create_tab_view(model)
+            # Handle display as additional tab
+            if display_preference == "additional_tab":
+                # Add button if configured
+                if should_add_button:
+                    extensions.append(create_add_attachment_button(app_model_name))
+
+                # Register tab view
+                register_attachment_tab_view(model)
                 continue
 
-            # Otherwise create panels and tweak them to the configured location (left, right, full_width_page)
-            klass_name = f"{app_label}_{model}_plugin_template_extension"
-            dynamic_klass = type(
-                klass_name,
+            # Create panel extension in the specified location
+            extension_name = f"{app_label}_{model_name}_attachment_extension"
+            extension_class = type(
+                extension_name,
                 (PluginTemplateExtension,),
-                {"model": app_model_name, display: create_attachments_panel},
+                {"model": app_model_name, display_preference: render_attachment_panel},
             )
 
-            template_extensions.append(dynamic_klass)
-    except OperationalError as e:
-        logging.error("Database is not ready")
-        logging.debug(e)
+            extensions.append(extension_class)
+
+    except OperationalError:
+        logger.error("Database is not ready, skipping template extensions setup")
     except Exception as e:
-        logging.error("Unexpected error - netbox-attachments won't be rendered")
-        logging.debug(e)
+        logger.error("Unexpected error in template extensions setup")
+        logger.debug(f"Error details: {str(e)}", exc_info=True)
 
-    return template_extensions
+    return extensions
 
 
-template_extensions = get_templates_extensions()
+# Generate all template extensions
+template_extensions = get_template_extensions()

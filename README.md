@@ -12,17 +12,17 @@ This plugin provides the following model:
 
 The following table shows the compatibility between different NetBox versions and plugin versions:
 
-| NetBox Version | Plugin Version     |
-| -------------- | ------------------ |
-| >= 3.3.4       | 0.0.0 - 0.0.5      |
-| >= 3.4.0       | 0.0.6 - 1.0.6      |
-| >= 3.4.3       | 1.0.7 - 1.1.x      |
-| >= 3.5.0       | 2.0.0              |
-| >= 3.6.0       | 3.0.0              |
-| >= 3.7.0       | 4.0.0              |
-| >= 4.0.0       | 5.x.x              |
-| >= 4.1.0       | 6.x.x              |
-| >= 4.2.0       | 7.x.x              |
+| NetBox Version | Plugin Version |
+| -------------- | -------------- |
+| >= 3.3.4       | 0.0.0 - 0.0.5  |
+| >= 3.4.0       | 0.0.6 - 1.0.6  |
+| >= 3.4.3       | 1.0.7 - 1.1.x  |
+| >= 3.5.0       | 2.0.0          |
+| >= 3.6.0       | 3.0.0          |
+| >= 3.7.0       | 4.0.0          |
+| >= 4.0.0       | 5.x.x          |
+| >= 4.1.0       | 6.x.x          |
+| >= 4.2.0       | 7.x.x          |
 
 ## Installation
 
@@ -61,16 +61,33 @@ For more details, see the [NetBox Documentation](https://docs.netbox.dev/en/stab
 
 The plugin can be customized using the following configuration options:
 
-- `apps`:
+- `applied_scope`:
+
+  - **Type**: String
+  - **Default**: `"app"`
+  - **Options**: `"app"`, `"model"`
+  - **Description**: Determines how attachments are enabled. In 'app' mode, attachments are allowed for all models in the configured apps. In 'model' mode, attachments can be enabled for specific models or all models within specified apps.
+
+- `scope_filter`:
+
   - **Type**: List
   - **Default**: `['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless']`
-  - **Description**: Specify the app labels where the `Attachments` feature should be enabled. Attachments are displayed on the `right_page` of the detail view of the models.
+  - **Description**: List of items to filter by.
+    - In 'app' mode: Should contain app labels (e.g., 'dcim', 'ipam')
+    - In 'model' mode: Can contain specific model strings in the format `app_label.model_name` (e.g., 'dcim.device') or app labels to include all models from that app.
 
 - `display_default`:
+
   - **Type**: String
   - **Default**: `"additional_tab"`
   - **Options**: `"left_page"`, `"right_page"`, `"full_width_page"`, `"additional_tab"`
   - **Description**: Sets the default location where attachments should be displayed in the models.
+
+- `create_add_button`:
+
+  - **Type**: Boolean
+  - **Default**: `True`
+  - **Description**: Specific only to `additional_tab` display setting. If set to True, it will create an "Add Attachment" button at the top of the parent view.
 
 - `display_setting`:
   - **Type**: Dictionary
@@ -83,14 +100,15 @@ The plugin can be customized using the following configuration options:
 > ~~**Warning**: The `additional_tab` option does not work for plugin models.~~
 
 > **Note**: The `additional_tab` feature will work for plugin models if you include the following in your `urls.py`:
->```python
->path(
+>
+> ```python
+> path(
 >    "MODEL/<int:pk>/",
 >    include(get_model_urls("plugin_name", "model_name")),
->),
->```
+> ),
+> ```
+>
 > By doing so, the system will automatically include the Changelog, Journal, and other registered tabs (such as Attachments) when `additional_tab` is enabled.
-
 
 ### Configuration Example
 
@@ -99,13 +117,18 @@ Here is an example of how to configure the plugin in `configuration.py`:
 ```python
 PLUGINS_CONFIG = {
     'netbox_attachments': {
-        'apps': ['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless', 'inventory_monitor'],
+        'applied_scope': "model",  # 'app' or 'model'
+        'scope_filter': [
+            'dcim.device', 'ipam.prefix', 'ipam.ipaddress',  # Specific models
+            'tenancy',  # All models from this app
+        ],
         'display_default': "right_page",
-        'display_setting': {
+        'create_add_button': True,
+        'display_setting': { # Works only for `app.model` definition
             'ipam.vlan': "left_page",
             'dcim.device': "full_width_page",
             'dcim.devicerole': "full_width_page",
-            'inventory_monitor.probe': "additional_tab"
+            'tenancy.tenant': "additional_tab"
         }
     }
 }
@@ -115,21 +138,21 @@ PLUGINS_CONFIG = {
 
 To enable attachments for custom plugin models:
 
-1. Append your plugin to the `apps` configuration list:
+1. Append your plugin to the `scope_filter` configuration list:
 
-    ```python
-    apps: ['<plugin_name>']
-    ```
+   ```python
+   scope_filter: ['<plugin_name>']
+   ```
 
 2. Extend the detail templates of your plugin models:
 
-    ```django
-    {% load plugins %}  # At the top of the template
-    
-    {% plugin_right_page object %}  # Under the comments section
-    
-    # Add left_page and full_width for future extensions
-    ```
+   ```django
+   {% load plugins %}  # At the top of the template
+
+   {% plugin_right_page object %}  # Under the comments section
+
+   # Add left_page and full_width for future extensions
+   ```
 
 ### Example (Device Model)
 
@@ -142,9 +165,7 @@ To enable attachments for custom plugin models:
 
 - **Model View:**
   ![Platform attachments](docs/img/platform.png)
-  
 - **List View:**
   ![List View](docs/img/list.PNG)
-  
 - **Detail View:**
   ![Detail View](docs/img/detail.PNG)
