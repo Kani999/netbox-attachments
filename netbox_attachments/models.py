@@ -73,7 +73,7 @@ class NetBoxAttachment(NetBoxModel):
     def delete(self, *args, **kwargs):
         """
         Deletes the instance and its associated file while preserving the original filename.
-        
+
         This method first deletes the model instance from the database by invoking the superclass
         delete method, then removes the associated file from disk. The original filename is restored
         after deletion to support any post-deletion references, such as user notifications.
@@ -90,18 +90,20 @@ class NetBoxAttachment(NetBoxModel):
         self.file.name = _name
 
     def save(self, *args, **kwargs):
-
-        # Validate object type assignments
         """
         Saves the attachment after validating its object type and updating file attributes.
-        
+
         The method first verifies that the associated object model is permitted for attachments and
         raises a ValidationError if not. It then sets the file size and, if a file is provided without a
         name, assigns a name based on whether the instance is being created or updated. Finally, it calls
         the parent save method to persist the instance.
         """
+
+        # Validate object type assignments
         if not validate_object_type(self.object_type.model_class()):
-            raise ValidationError(f'Unpermitted attachment to model {self.object_type.app_label}.{self.object_type.model}')
+            raise ValidationError(
+                f"Unpermitted attachment to model {self.object_type.app_label}.{self.object_type.model}"
+            )
 
         self.size = self.file.size
 
