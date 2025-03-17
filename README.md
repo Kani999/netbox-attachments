@@ -56,6 +56,11 @@ Restart NetBox and ensure that `netbox-attachments` is included in your `local_r
 
 For more details, see the [NetBox Documentation](https://docs.netbox.dev/en/stable/plugins/#installing-plugins).
 
+
+## New Validation Checks
+
+From version `7.2.0`, we introduce new model-level validation that ensures attachments are only created for permitted object types. Attempting to attach to an unpermitted model will raise a ValidationError.
+
 ## Configuration
 
 ### Plugin Options
