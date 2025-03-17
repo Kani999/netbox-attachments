@@ -13,6 +13,7 @@ from utilities.views import ViewTab, register_model_view
 
 from netbox_attachments import filtersets, tables
 from netbox_attachments.models import NetBoxAttachment
+from netbox_attachments.utils import validate_object_type
 
 logger = logging.getLogger(__name__)
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
@@ -124,16 +125,7 @@ def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
 
     try:
         # Extract plugin settings with defaults
-        applied_scope = PLUGIN_SETTINGS.get("applied_scope", "app")
-        scope_filter = PLUGIN_SETTINGS.get("scope_filter", [])
         should_add_button = PLUGIN_SETTINGS.get("create_add_button", False)
-
-        # Validate settings
-        if applied_scope not in ["app", "model"]:
-            logger.warning(
-                f"Invalid applied_scope '{applied_scope}', defaulting to 'app'"
-            )
-            applied_scope = "app"
 
         if not isinstance(should_add_button, bool):
             logger.warning("Invalid create_add_button value, defaulting to False")
@@ -141,17 +133,12 @@ def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
 
         # Process each model
         for model in apps.get_models():
+            if not validate_object_type(model):
+                continue
+
             app_label = model._meta.app_label
             model_name = model._meta.model_name
-            app_model_name = f"{app_label}.{model_name}"
-
-            # Check if model should be included based on scope
-            if applied_scope == "model":
-                # Enhanced logic: allow both specific models and entire apps
-                if app_model_name not in scope_filter and app_label not in scope_filter:
-                    continue
-            elif applied_scope == "app" and app_label not in scope_filter:
-                continue
+            app_model_name = f"{model._meta.app_label}.{model._meta.model_name}"
 
             # Get display preference for this model
             display_preference = get_display_preference(app_model_name)

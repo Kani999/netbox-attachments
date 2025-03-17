@@ -2,7 +2,7 @@ import numbers
 import os
 
 from core.models.contenttypes import ObjectType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from netbox.models import NetBoxModel
 from utilities.querysets import RestrictedQuerySet
 
-from netbox_attachments.utils import attachment_upload
+from netbox_attachments.utils import attachment_upload, validate_object_type
 
 
 class NetBoxAttachment(NetBoxModel):
@@ -83,6 +83,11 @@ class NetBoxAttachment(NetBoxModel):
         self.file.name = _name
 
     def save(self, *args, **kwargs):
+
+        # Validate object type assignments
+        if not validate_object_type(self.object_type.model_class()):
+            raise ValidationError(f'Unpermitted attachment to model {self.object_type.app_label}.{self.object_type.model}')
+
         self.size = self.file.size
 
         if not self.file:
