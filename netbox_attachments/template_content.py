@@ -116,10 +116,17 @@ def register_attachment_tab_view(model: Type[Model]) -> None:
 
 def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
     """
-    Generate plugin template extensions for all eligible models based on plugin settings.
+    Generates template extension classes for eligible models.
+
+    Iterates through all registered Django models, validates each for eligibility, and determines
+    its display preference from the plugin settings. If the preference is "additional_tab", the
+    function registers an attachment tab view and optionally adds an "add attachment" button.
+    Otherwise, it creates a panel extension class that renders an attachment panel. Database
+    operational errors and unexpected exceptions are logged without interrupting the extension
+    generation process.
 
     Returns:
-        List[Type[PluginTemplateExtension]]: List of template extension classes
+        List[Type[PluginTemplateExtension]]: A list of dynamically created template extension classes.
     """
     extensions = []
 
