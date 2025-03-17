@@ -10,6 +10,7 @@ from utilities.forms.fields import (
 from utilities.forms.widgets.apiselect import APISelectMultiple
 
 from netbox_attachments.models import NetBoxAttachment
+from netbox_attachments.utils import validate_object_type
 
 
 class NetBoxAttachmentForm(NetBoxModelForm):
@@ -24,6 +25,24 @@ class NetBoxAttachmentForm(NetBoxModelForm):
             "comments",
             "tags",
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        self._validate_object_type()
+        return cleaned_data
+
+    def _validate_object_type(self):
+        """Validate that the attachment's object type is permitted."""
+        object_type = getattr(self.instance, "object_type", None)
+
+        if object_type:
+            model_class = object_type.model_class()
+            if not validate_object_type(model_class):
+                model_name = f"{object_type.app_label}.{object_type.model}"
+                raise forms.ValidationError(
+                    message=f"Attachments are not permitted for {model_name}",
+                    code="invalid_attachment_target",
+                )
 
 
 class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
