@@ -29,7 +29,9 @@ def render_attachment_panel(self) -> str:
     Returns:
         str: Rendered HTML content or empty string if rendering fails
     """
-    app_label, _ = self.model.split(".")
+    model_name = self.models[0] if hasattr(self, "models") else self.model
+
+    app_label, _ = model_name.split(".")
     try:
         return self.render("netbox_attachments/netbox_attachment_panel.html")
     except ObjectType.DoesNotExist:
