@@ -67,7 +67,7 @@ def create_add_attachment_button(model_name: str) -> Type[PluginTemplateExtensio
     """
 
     class AddAttachmentButton(PluginTemplateExtension):
-        model = model_name
+        models = [model_name]
 
         def buttons(self):
             return self.render("netbox_attachments/add_attachment_button.html")
