@@ -165,7 +165,10 @@ def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
             extension_class = type(
                 extension_name,
                 (PluginTemplateExtension,),
-                {"model": app_model_name, display_preference: render_attachment_panel},
+                {
+                    "models": [app_model_name],
+                    display_preference: render_attachment_panel,
+                },
             )
 
             extensions.append(extension_class)
