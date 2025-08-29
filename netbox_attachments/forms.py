@@ -1,7 +1,11 @@
 from core.models.contenttypes import ObjectType
 from django import forms
 from django.utils.translation import gettext as _
-from netbox.forms import NetBoxModelFilterSetForm, NetBoxModelForm
+from netbox.forms import (
+    NetBoxModelBulkEditForm,
+    NetBoxModelFilterSetForm,
+    NetBoxModelForm,
+)
 from utilities.forms.fields import (
     CommentField,
     DynamicModelMultipleChoiceField,
@@ -58,3 +62,11 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
         ),
     )
     tag = TagFilterField(model)
+
+
+class NetBoxAttachmentBulkEditForm(NetBoxModelBulkEditForm):
+    name = forms.CharField(max_length=100, required=False)
+    description = forms.CharField(max_length=200, required=False)
+
+    model = NetBoxAttachment
+    nullable_fields = ("description",)

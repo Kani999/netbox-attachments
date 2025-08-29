@@ -12,7 +12,6 @@ class NetBoxAttachmentView(generic.ObjectView):
 
 class NetBoxAttachmentListView(generic.ObjectListView):
     actions = {
-        "import": {"add"},
         "export": set(),
         "bulk_edit": {"change"},
         "bulk_delete": {"delete"},
@@ -48,4 +47,17 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
 
 class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
     queryset = models.NetBoxAttachment.objects.all()
+
+
+class NetBoxAttachmentBulkEditView(generic.BulkEditView):
+    queryset = models.NetBoxAttachment.objects.all()
+    filterset = filtersets.NetBoxAttachmentFilterSet
+    table = tables.NetBoxAttachmentTable
+    form = forms.NetBoxAttachmentBulkEditForm
+
+
+class NetBoxAttachmentBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.NetBoxAttachment.objects.all()
+    filterset = filtersets.NetBoxAttachmentFilterSet
+    table = tables.NetBoxAttachmentTable
     default_return_url = "plugins:netbox_attachments:netboxattachment_list"
