@@ -25,6 +25,7 @@ The following table shows the compatibility between different NetBox versions an
 | >= 4.1.0       | 6.x.x          |
 | >= 4.2.0       | 7.x.x          |
 | >= 4.3.0       | 8.x.x          |
+| >= 4.4.0       | 9.x.x          |
 
 ## Installation
 
@@ -56,6 +57,22 @@ python3 manage.py migrate netbox_attachments
 Restart NetBox and ensure that `netbox-attachments` is included in your `local_requirements.txt`.
 
 For more details, see the [NetBox Documentation](https://docs.netbox.dev/en/stable/plugins/#installing-plugins).
+
+## NetBox 4.4 Compatibility Changes
+
+Starting from version 9.0.0, the plugin has been updated for full NetBox 4.4 compatibility with the following changes:
+
+### Template Extension Updates
+- **Models Attribute**: Updated template extensions to use the `models` list attribute instead of the deprecated `model` attribute for NetBox 4.x compatibility.
+- **Error Handling**: Improved error handling for template rendering when object types are missing.
+- **Template Panel Rendering**: Fixed AttributeError issues in `render_attachment_panel` function for proper template extension compatibility.
+
+### API and URL Improvements
+- **Bulk Action URLs**: Added proper URL patterns for bulk edit and bulk delete operations.
+- **URL Pattern Reorganization**: Improved URL pattern ordering for better routing logic.
+- **Default Return URLs**: Enhanced navigation flow after bulk operations.
+
+These changes ensure the plugin works seamlessly with NetBox 4.4 while maintaining all core attachment functionality and improving the user experience.
 
 
 ## New Validation Checks
@@ -104,16 +121,49 @@ The plugin can be customized using the following configuration options:
   - **Description**: Override the display settings for specific models.
   - **Tip**: Use the correct `app_label` and `model` names, which can be found in the API at `<your_netbox_url>/api/extras/content-types/`.
 
-> ~~**Warning**: The `additional_tab` option does not work for plugin models.~~
+
+## API Usage
+
+Since the import functionality has been removed, you can use the NetBox API to programmatically manage attachments:
+
+### Creating Attachments via API
+
+```python
+import requests
+
+# Example: Upload attachment via API
+url = "https://your-netbox-url/api/plugins/netbox-attachments/attachments/"
+headers = {
+    "Authorization": "Token your-api-token",
+    "Content-Type": "application/json"
+}
+
+# For file uploads, use multipart/form-data
+files = {
+    'file': ('filename.pdf', open('path/to/file.pdf', 'rb'))
+}
+data = {
+    'object_type': 'dcim.device',  # ContentType ID or app_label.model
+    'object_id': 123,
+    'name': 'Device Manual',
+    'description': 'User manual for the device'
+}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+```
 
 > **Note**: The `additional_tab` feature will work for plugin models if you include the following in your `urls.py`:
 >
 > ```python
+> from netbox.urls import get_model_urls
+> 
 > path(
 >    "MODEL/<int:pk>/",
 >    include(get_model_urls("plugin_name", "model_name")),
 > ),
 > ```
+>
+> **Note**: `plugin_name` refers to the plugin slug used in URLs (often hyphenated), which may differ from the Python package/module name.
 >
 > By doing so, the system will automatically include the Changelog, Journal, and other registered tabs (such as Attachments) when `additional_tab` is enabled.
 

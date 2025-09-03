@@ -1,7 +1,7 @@
 import logging
 from typing import List, Type
 
-from core.models.contenttypes import ObjectType
+from core.models.object_types import ObjectType
 from django.apps import apps
 from django.conf import settings
 from django.db.models import Model
