@@ -65,8 +65,14 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
 
 
 class NetBoxAttachmentBulkEditForm(NetBoxModelBulkEditForm):
-    name = forms.CharField(max_length=100, required=False)
-    description = forms.CharField(max_length=200, required=False)
+    name = forms.CharField(
+        max_length=NetBoxAttachment._meta.get_field("name").max_length, required=False
+    )
+    description = forms.CharField(
+        widget=forms.Textarea,
+        max_length=NetBoxAttachment._meta.get_field("description").max_length,
+        required=False,
+    )
 
     model = NetBoxAttachment
-    nullable_fields = ("description",)
+    nullable_fields = ("name", "description")

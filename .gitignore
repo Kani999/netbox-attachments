@@ -5,5 +5,5 @@ __pycache__
 dist/
 build/
 .vscode/
-contrib/
-pynetbox_test.py
+/contrib/
+/pynetbox_test.py

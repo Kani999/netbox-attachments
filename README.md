@@ -155,11 +155,15 @@ response = requests.post(url, headers=headers, files=files, data=data)
 > **Note**: The `additional_tab` feature will work for plugin models if you include the following in your `urls.py`:
 >
 > ```python
+> from netbox.urls import get_model_urls
+> 
 > path(
 >    "MODEL/<int:pk>/",
 >    include(get_model_urls("plugin_name", "model_name")),
 > ),
 > ```
+>
+> **Note**: `plugin_name` refers to the plugin slug used in URLs (often hyphenated), which may differ from the Python package/module name.
 >
 > By doing so, the system will automatically include the Changelog, Journal, and other registered tabs (such as Attachments) when `additional_tab` is enabled.
 

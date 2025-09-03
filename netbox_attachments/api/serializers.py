@@ -45,24 +45,36 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
                 )
             )
 
-        # Enforce model validation
-        super().validate(data)
+        # Enforce model validation and capture any upstream mutations
+        validated_data = super().validate(data)
 
-        return data
+        return validated_data
 
     # @swagger_serializer_method(serializer_or_field=serializers.JSONField)
     def get_parent(self, obj):
-        try:
-            # Check if object_type exists and parent can be accessed
-            if hasattr(obj, "object_type") and obj.parent:
-                serializer = get_serializer_for_model(obj.parent)
-                return serializer(
-                    obj.parent,
-                    nested=True,
-                    context={"request": self.context["request"]},
-                ).data
-            else:
-                return None
-        except (ObjectDoesNotExist, AttributeError):
-            # Handle case where object_type is null or doesn't exist
+        # Check for required fields first to avoid unnecessary DB lookups
+        if not (
+            hasattr(obj, "object_type_id")
+            and obj.object_type_id
+            and hasattr(obj, "object_id")
+            and obj.object_id
+        ):
             return None
+
+        # Only wrap the parent dereference in try/except to let other errors bubble
+        try:
+            parent = obj.parent
+        except ObjectDoesNotExist:
+            # Handle case where parent object doesn't exist
+            return None
+
+        if parent is None:
+            return None
+
+        # Get serializer for the parent's class, not the instance
+        serializer = get_serializer_for_model(parent.__class__)
+        return serializer(
+            parent,
+            nested=True,
+            context=self.context,
+        ).data

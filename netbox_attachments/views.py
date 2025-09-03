@@ -8,7 +8,6 @@ from netbox_attachments import filtersets, forms, models, tables
 
 @register_model_view(models.NetBoxAttachment, name="", detail=True)
 class NetBoxAttachmentView(generic.ObjectView):
-    controls = []
     queryset = models.NetBoxAttachment.objects.all()
 
 

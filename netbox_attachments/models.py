@@ -57,17 +57,18 @@ class NetBoxAttachment(NetBoxModel):
 
     @property
     def parent(self):
+        # Guard using object_type_id and object_id
+        if not (self.object_type_id and self.object_id):
+            return None
+
+        if self.object_type.model_class() is None:
+            # Model was probably deleted or uninstalled — parent object cannot be found
+            return None
+
         try:
-            # Check if object_type exists first
-            if not hasattr(self, "object_type"):
-                return None
-            if self.object_type.model_class() is None:
-                # Model for the content type does not exists
-                # Model was probably deleted or uninstalled -> parent object cannot be found
-                return None
             return self.object_type.get_object_for_this_type(id=self.object_id)
-        except (ObjectDoesNotExist, AttributeError):
-            # Handle case where object_type is null or object doesn't exist
+        except ObjectDoesNotExist:
+            # Handle case where parent object doesn't exist
             return None
 
     def get_absolute_url(self):
