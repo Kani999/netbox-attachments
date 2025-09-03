@@ -1,15 +1,18 @@
-from core.models.contenttypes import ObjectType
+from core.models.object_types import ObjectType
 from django.shortcuts import get_object_or_404
 from netbox.views import generic
+from utilities.views import register_model_view
 
 from netbox_attachments import filtersets, forms, models, tables
 
 
+@register_model_view(models.NetBoxAttachment, name="", detail=True)
 class NetBoxAttachmentView(generic.ObjectView):
     controls = []
     queryset = models.NetBoxAttachment.objects.all()
 
 
+@register_model_view(models.NetBoxAttachment, name="list", path="", detail=False)
 class NetBoxAttachmentListView(generic.ObjectListView):
     actions = {
         "export": set(),
@@ -22,6 +25,8 @@ class NetBoxAttachmentListView(generic.ObjectListView):
     filterset_form = forms.NetBoxAttachmentFilterForm
 
 
+@register_model_view(models.NetBoxAttachment, name="add", detail=False)
+@register_model_view(models.NetBoxAttachment, name="edit", detail=True)
 class NetBoxAttachmentEditView(generic.ObjectEditView):
     queryset = models.NetBoxAttachment.objects.all()
     form = forms.NetBoxAttachmentForm
@@ -45,10 +50,12 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
         }
 
 
+@register_model_view(models.NetBoxAttachment, name="delete", detail=True)
 class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
     queryset = models.NetBoxAttachment.objects.all()
 
 
+@register_model_view(models.NetBoxAttachment, "bulk_edit", path="edit", detail=False)
 class NetBoxAttachmentBulkEditView(generic.BulkEditView):
     queryset = models.NetBoxAttachment.objects.all()
     filterset = filtersets.NetBoxAttachmentFilterSet
@@ -56,6 +63,9 @@ class NetBoxAttachmentBulkEditView(generic.BulkEditView):
     form = forms.NetBoxAttachmentBulkEditForm
 
 
+@register_model_view(
+    models.NetBoxAttachment, "bulk_delete", path="delete", detail=False
+)
 class NetBoxAttachmentBulkDeleteView(generic.BulkDeleteView):
     queryset = models.NetBoxAttachment.objects.all()
     filterset = filtersets.NetBoxAttachmentFilterSet

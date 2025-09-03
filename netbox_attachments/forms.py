@@ -1,4 +1,4 @@
-from core.models.contenttypes import ObjectType
+from core.models.object_types import ObjectType
 from django import forms
 from django.utils.translation import gettext as _
 from netbox.forms import (

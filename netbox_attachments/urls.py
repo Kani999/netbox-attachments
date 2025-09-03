@@ -1,10 +1,9 @@
-from django.urls import path
-from netbox.views.generic import ObjectChangeLogView
+from django.urls import include, path
+from utilities.urls import get_model_urls
 
-from netbox_attachments import models, views
+from netbox_attachments import views
 
 urlpatterns = (
-    # Files
     path(
         "netbox-attachments/",
         views.NetBoxAttachmentListView.as_view(),
@@ -41,9 +40,11 @@ urlpatterns = (
         name="netboxattachment_delete",
     ),
     path(
-        "netbox-attachments/<int:pk>/changelog/",
-        ObjectChangeLogView.as_view(),
-        name="netboxattachment_changelog",
-        kwargs={"model": models.NetBoxAttachment},
+        "netbox-attachments/",
+        include(get_model_urls("netbox_attachments", "netboxattachment", detail=False)),
+    ),
+    path(
+        "netbox-attachments/<int:pk>/",
+        include(get_model_urls("netbox_attachments", "netboxattachment")),
     ),
 )

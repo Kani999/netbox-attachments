@@ -1,4 +1,4 @@
-from core.models.contenttypes import ObjectType
+from core.models.object_types import ObjectType
 from django.core.exceptions import ObjectDoesNotExist
 from netbox.api.fields import ContentTypeField
 from netbox.api.serializers import NetBoxModelSerializer
@@ -52,10 +52,17 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
 
     # @swagger_serializer_method(serializer_or_field=serializers.JSONField)
     def get_parent(self, obj):
-        if obj.parent:
-            serializer = get_serializer_for_model(obj.parent)
-            return serializer(
-                obj.parent, nested=True, context={"request": self.context["request"]}
-            ).data
-        else:
+        try:
+            # Check if object_type exists and parent can be accessed
+            if hasattr(obj, "object_type") and obj.parent:
+                serializer = get_serializer_for_model(obj.parent)
+                return serializer(
+                    obj.parent,
+                    nested=True,
+                    context={"request": self.context["request"]},
+                ).data
+            else:
+                return None
+        except (ObjectDoesNotExist, AttributeError):
+            # Handle case where object_type is null or doesn't exist
             return None

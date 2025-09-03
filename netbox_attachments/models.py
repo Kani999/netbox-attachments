@@ -1,7 +1,7 @@
 import numbers
 import os
 
-from core.models.contenttypes import ObjectType
+from core.models.object_types import ObjectType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models.signals import pre_delete
@@ -57,14 +57,17 @@ class NetBoxAttachment(NetBoxModel):
 
     @property
     def parent(self):
-        if self.object_type.model_class() is None:
-            # Model for the content type does not exists
-            # Model was probably deleted or uninstalled -> parent object cannot be found
-            return None
         try:
+            # Check if object_type exists first
+            if not hasattr(self, "object_type"):
+                return None
+            if self.object_type.model_class() is None:
+                # Model for the content type does not exists
+                # Model was probably deleted or uninstalled -> parent object cannot be found
+                return None
             return self.object_type.get_object_for_this_type(id=self.object_id)
-        except ObjectDoesNotExist:
-            # Object for the content type Model does not exists
+        except (ObjectDoesNotExist, AttributeError):
+            # Handle case where object_type is null or object doesn't exist
             return None
 
     def get_absolute_url(self):
