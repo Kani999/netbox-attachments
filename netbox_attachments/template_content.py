@@ -57,12 +57,14 @@ def get_display_preference(app_model_name: str) -> str:
     return display_settings.get(app_model_name, default_display)
 
 
-def create_add_attachment_button(model_name: str) -> Type[PluginTemplateExtension]:
+def create_add_attachment_button(model_name: str, url_pattern_name: str) -> Type[PluginTemplateExtension]:
     """
     Creates an 'add attachment' button extension for a model.
 
     Args:
         model_name: String in format "<app_label>.<model>" (e.g., "dcim.device")
+        url_pattern_name: Fully qualified URL pattern name for the attachment list view
+            (e.g., "dcim:device_device-attachment_list")
 
     Returns:
         Type[PluginTemplateExtension]: Button extension class
@@ -72,17 +74,23 @@ def create_add_attachment_button(model_name: str) -> Type[PluginTemplateExtensio
         models = [model_name]
 
         def buttons(self):
-            return self.render("netbox_attachments/add_attachment_button.html")
+            return self.render(
+                "netbox_attachments/add_attachment_button.html",
+                extra_context={'object_type_attachment_list': url_pattern_name}
+            )
 
     return AddAttachmentButton
 
 
-def register_attachment_tab_view(model: Type[Model]) -> None:
+def register_attachment_tab_view(model: Type[Model]) -> str:
     """
     Creates and registers an attachment tab view for a model.
 
     Args:
         model: Django model class to add the tab view to
+
+    Returns:
+        str: name of the registered view
     """
     model_name = model._meta.model_name
     view_name = f"{model_name}-attachment_list"
@@ -114,6 +122,8 @@ def register_attachment_tab_view(model: Type[Model]) -> None:
             ).restrict(request.user, "view")
 
     register_model_view(model, name=view_name, path=view_path)(AttachmentTabView)
+
+    return view_name
 
 
 def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
@@ -154,12 +164,14 @@ def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
 
             # Handle display as additional tab
             if display_preference == "additional_tab":
+                # Register tab view
+                view_name = register_attachment_tab_view(model)
+
                 # Add button if configured
                 if should_add_button:
-                    extensions.append(create_add_attachment_button(app_model_name))
+                    url_pattern_name = f"{app_label}:{model_name}_{view_name}"
+                    extensions.append(create_add_attachment_button(app_model_name, url_pattern_name))
 
-                # Register tab view
-                register_attachment_tab_view(model)
                 continue
 
             # Create panel extension in the specified location
