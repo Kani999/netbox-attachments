@@ -1,5 +1,5 @@
 {% if perms.netbox_attachments.add_netboxattachment %}
-    <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ object.get_absolute_url }}"
+    <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% url object_type_attachment_list pk=object.pk %}"
        class="btn btn-secondary">
         <i class="mdi mdi-paperclip" aria-hidden="true"></i>
         Add Attachment
