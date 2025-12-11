@@ -46,12 +46,14 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
         return {
             "object_type": request.GET.get("object_type"),
             "object_id": request.GET.get("object_id"),
+            "return_url": request.GET.get("return_url"),
         }
 
 
 @register_model_view(models.NetBoxAttachment, name="delete", detail=True)
 class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
     queryset = models.NetBoxAttachment.objects.all()
+    default_return_url = "plugins:netbox_attachments:netboxattachment_list"
 
 
 @register_model_view(models.NetBoxAttachment, "bulk_edit", path="edit", detail=False)

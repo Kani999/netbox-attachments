@@ -1,7 +1,18 @@
+{# Add Attachment Button - Dynamically shown on object detail pages when create_add_button is enabled #}
+{# The return_url will redirect back to the object's attachment list tab after creating an attachment #}
 {% if perms.netbox_attachments.add_netboxattachment %}
-    <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% url object_type_attachment_list pk=object.pk %}"
-       class="btn btn-secondary">
-        <i class="mdi mdi-paperclip" aria-hidden="true"></i>
-        Add Attachment
-    </a>
+    {% if object_type_attachment_list %}
+        <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% url object_type_attachment_list pk=object.pk %}"
+           class="btn btn-secondary">
+            <i class="mdi mdi-paperclip" aria-hidden="true"></i>
+            Add Attachment
+        </a>
+    {% else %}
+        {# Fallback when object_type_attachment_list is not available - returns to current page #}
+        <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path }}"
+           class="btn btn-secondary">
+            <i class="mdi mdi-paperclip" aria-hidden="true"></i>
+            Add Attachment
+        </a>
+    {% endif %}
 {% endif %}

@@ -74,10 +74,14 @@ def create_add_attachment_button(model_name: str, url_pattern_name: str) -> Type
         models = [model_name]
 
         def buttons(self):
-            return self.render(
-                "netbox_attachments/add_attachment_button.html",
-                extra_context={'object_type_attachment_list': url_pattern_name}
-            )
+            try:
+                return self.render(
+                    "netbox_attachments/add_attachment_button.html",
+                    extra_context={'object_type_attachment_list': url_pattern_name}
+                )
+            except Exception as e:
+                logger.error(f"Failed to render add attachment button for {model_name}: {e}")
+                return ""
 
     return AddAttachmentButton
 
