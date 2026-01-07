@@ -26,6 +26,7 @@ The following table shows the compatibility between different NetBox versions an
 | >= 4.2.0       | 7.x.x          |
 | >= 4.3.0       | 8.x.x          |
 | >= 4.4.0       | 9.x.x          |
+| >= 4.5.0       | 10.x.x         |
 
 ## Installation
 

@@ -58,7 +58,7 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
         required=False,
         label=_("Object Type"),
         widget=APISelectMultiple(
-            api_url="/api/extras/object-types/",
+            api_url="/api/core/object-types/",
         ),
     )
     tag = TagFilterField(model)
