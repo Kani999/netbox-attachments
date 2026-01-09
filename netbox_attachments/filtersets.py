@@ -3,10 +3,12 @@ from django.db.models import Q
 from extras.filters import TagFilter
 from netbox.filtersets import NetBoxModelFilterSet
 from utilities.filters import ContentTypeFilter
+from utilities.filtersets import register_filterset
 
 from netbox_attachments.models import NetBoxAttachment
 
 
+@register_filterset
 class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):
     q = django_filters.CharFilter(method="search", label="Search")
     created = django_filters.DateTimeFilter()

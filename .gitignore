@@ -7,3 +7,4 @@ build/
 .vscode/
 /contrib/
 /pynetbox_test.py
+CLAUDE.md
