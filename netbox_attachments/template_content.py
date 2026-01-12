@@ -13,7 +13,7 @@ from utilities.views import ViewTab, register_model_view
 
 from netbox_attachments import filtersets, tables
 from netbox_attachments.models import NetBoxAttachment
-from netbox_attachments.utils import validate_object_type
+from netbox_attachments.utils import is_custom_object_model, validate_object_type
 
 logger = logging.getLogger(__name__)
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
@@ -130,16 +130,70 @@ def register_attachment_tab_view(model: Type[Model]) -> str:
     return view_name
 
 
+def discover_custom_object_models():
+    """
+    Discovers dynamically created NetBox Custom Objects models.
+
+    Attempts to load the netbox_custom_objects app and retrieve its models,
+    which include both regular plugin models and dynamically created custom
+    object models. Returns an empty list if the plugin is not installed or
+    encounters errors.
+
+    Returns:
+        List[Type[Model]]: List of custom object models, or empty list if unavailable
+    """
+    try:
+        custom_objects_app = apps.get_app_config('netbox_custom_objects')
+
+        # Get all models from the app (includes both regular and dynamic models)
+        all_models = list(custom_objects_app.get_models())
+
+        logger.debug(
+            f"Found {len(all_models)} total models in netbox_custom_objects app"
+        )
+
+        # Filter to only include actual custom object models
+        custom_object_models = [m for m in all_models if is_custom_object_model(m)]
+
+        logger.info(
+            f"Discovered {len(custom_object_models)} custom object models for attachments"
+        )
+
+        return custom_object_models
+
+    except LookupError:
+        logger.info(
+            "NetBox Custom Objects plugin not found - custom objects support disabled"
+        )
+        return []
+    except ImportError as e:
+        logger.warning(
+            f"Could not import netbox_custom_objects: {e}"
+        )
+        return []
+    except Exception as e:
+        logger.error(
+            f"Unexpected error discovering custom object models: {e}",
+            exc_info=True
+        )
+        return []
+
+
 def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
     """
     Generates template extension classes for eligible models.
 
-    Iterates through all registered Django models, validates each for eligibility, and determines
-    its display preference from the plugin settings. If the preference is "additional_tab", the
-    function registers an attachment tab view and optionally adds an "add attachment" button.
-    Otherwise, it creates a panel extension class that renders an attachment panel. Database
-    operational errors and unexpected exceptions are logged without interrupting the extension
-    generation process.
+    Iterates through all registered Django models (including custom object models),
+    validates each for eligibility, and determines its display preference from the
+    plugin settings. If the preference is "additional_tab", the function registers
+    an attachment tab view and optionally adds an "add attachment" button.
+    Otherwise, it creates a panel extension class that renders an attachment panel.
+
+    Custom object models from the netbox_custom_objects plugin are discovered
+    separately and processed using the same validation and registration logic.
+
+    Database operational errors and unexpected exceptions are logged without
+    interrupting the extension generation process.
 
     Returns:
         List[Type[PluginTemplateExtension]]: A list of dynamically created template extension classes.
@@ -154,8 +208,40 @@ def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
             logger.warning("Invalid create_add_button value, defaulting to False")
             should_add_button = False
 
+        # Collect all models to process
+        all_models = []
+
+        # Add standard Django models
+        standard_models = list(apps.get_models())
+        all_models.extend(standard_models)
+        logger.debug(f"Found {len(standard_models)} standard Django models")
+
+        # Add custom object models if enabled
+        custom_object_models = discover_custom_object_models()
+        if custom_object_models:
+            all_models.extend(custom_object_models)
+            logger.info(
+                f"Added {len(custom_object_models)} custom object models to processing queue"
+            )
+
+        # Deduplicate models by their unique identifier (app_label.model_name)
+        # This prevents duplicate template extensions for the same model
+        seen_models = set()
+        unique_models = []
+        for model in all_models:
+            model_id = f"{model._meta.app_label}.{model._meta.model_name}"
+            if model_id not in seen_models:
+                seen_models.add(model_id)
+                unique_models.append(model)
+
+        if len(all_models) != len(unique_models):
+            logger.debug(
+                f"Deduplicated models: {len(all_models)} -> {len(unique_models)} "
+                f"(removed {len(all_models) - len(unique_models)} duplicates)"
+            )
+
         # Process each model
-        for model in apps.get_models():
+        for model in unique_models:
             if not validate_object_type(model):
                 continue
 
@@ -165,6 +251,18 @@ def get_template_extensions() -> List[Type[PluginTemplateExtension]]:
 
             # Get display preference for this model
             display_preference = get_display_preference(app_model_name)
+
+            # Check if this is a custom object model
+            is_custom_obj = is_custom_object_model(model)
+
+            # Custom objects don't support additional_tab due to non-standard URL routing
+            # Force them to use full_width_page instead
+            if is_custom_obj and display_preference == "additional_tab":
+                logger.info(
+                    f"Custom object {app_model_name} forced to full_width_page display "
+                    "(additional_tab not supported for custom objects)"
+                )
+                display_preference = "full_width_page"
 
             # Handle display as additional tab
             if display_preference == "additional_tab":
