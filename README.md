@@ -97,9 +97,12 @@ The plugin can be customized using the following configuration options:
 
   - **Type**: List
   - **Default**: `['dcim', 'ipam', 'circuits', 'tenancy', 'virtualization', 'wireless']`
-  - **Description**: List of items to filter by.
-    - In 'app' mode: Should contain app labels (e.g., 'dcim', 'ipam')
-    - In 'model' mode: Can contain specific model strings in the format `app_label.model_name` (e.g., 'dcim.device') or app labels to include all models from that app.
+  - **Description**: List of items to filter by. The expected format depends on the `applied_scope` mode:
+    - In **'app' mode**: Should contain app labels (e.g., `'dcim'`, `'ipam'`, `'netbox_custom_objects'` to enable all custom objects)
+    - In **'model' mode**: Can contain:
+      - Specific model strings in the format `app_label.model_name` (e.g., `'dcim.device'`)
+      - App labels to include all models from that app (e.g., `'dcim'`)
+      - For NetBox Custom Objects: `'netbox_custom_objects.{CustomObjectType.name}'` to enable specific custom object types (see [Custom Objects Support](#custom-objects-support-new-feature) below)
 
 - `display_default`:
 
@@ -121,6 +124,77 @@ The plugin can be customized using the following configuration options:
   - **Example**: `{'dcim.devicerole': 'full_width_page', 'dcim.device': 'left_page', 'ipam.vlan': 'additional_tab'}`
   - **Description**: Override the display settings for specific models.
   - **Tip**: Use the correct `app_label` and `model` names, which can be found in the API at `<your_netbox_url>/api/extras/content-types/`.
+
+### Custom Objects Support (New Feature)
+
+The plugin now supports the NetBox Custom Objects plugin, allowing attachments on dynamically created custom object models.
+
+- In **'app' mode**: Add `'netbox_custom_objects'` to `scope_filter` to enable attachments for all custom objects without specifying individual types.
+- In **'model' mode**: Use the format `'netbox_custom_objects.{CustomObjectType.name}'` to enable attachments for specific custom object types only.
+
+#### Configuration Examples
+
+**Example 1: Enable all custom objects (app mode)**
+```python
+PLUGINS_CONFIG = {
+    'netbox_attachments': {
+        'applied_scope': 'app',
+        'scope_filter': ['dcim', 'ipam', 'netbox_custom_objects'],
+    }
+}
+```
+
+**Example 2: Enable specific custom objects only**
+```python
+PLUGINS_CONFIG = {
+    'netbox_attachments': {
+        'applied_scope': 'model',
+        'scope_filter': [
+            'dcim.device',
+            'ipam.ipaddress',
+            'netbox_custom_objects.attachment',
+            'netbox_custom_objects.vendor_policy',
+        ],
+    }
+}
+```
+
+**Example 3: Mixed mode - whole apps and specific models**
+```python
+PLUGINS_CONFIG = {
+    'netbox_attachments': {
+        'applied_scope': 'model',
+        'scope_filter': [
+            'dcim',
+            'circuits',
+            'ipam.ipaddress',
+            'netbox_custom_objects.attachment',
+        ],
+    }
+}
+```
+
+#### Finding Custom Object Names
+
+To find the CustomObjectType names for your configuration:
+
+1. Navigate to **NetBox → Custom Objects → Custom Objects Types**
+2. Look at the **"Name"** column
+3. Use these names in `scope_filter` with format: `'netbox_custom_objects.{name}'`
+
+You can also list all custom object names using the NetBox shell:
+```python
+from netbox_custom_objects.models import CustomObjectType
+
+for cot in CustomObjectType.objects.all():
+    print(f"Use in config: 'netbox_custom_objects.{cot.name}'")
+```
+
+**Important Notes:**
+- NetBox restart is required after adding or removing custom object types
+- The netbox-custom-objects plugin must be installed and configured
+- Custom object models are discovered at startup time only
+- **Limitation:** The `additional_tab` display mode is not supported for custom object models due to their non-standard URL routing. Custom objects will automatically use `full_width_page` display mode instead. You can override this by explicitly setting a different panel mode (`left_page`, `right_page`) in `display_setting`
 
 
 ## API Usage
