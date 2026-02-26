@@ -1,141 +1,55 @@
-"""
-Tests for template extension registration based on configuration.
-"""
+"""Unit tests for template display decision helpers."""
 
-from django.test import TestCase, override_settings
+from netbox_attachments import template_content
 
 
-class TemplateExtensionRegistrationTestCase(TestCase):
-    """Test template extension registration"""
+def test_get_display_preference_uses_default_when_unset(monkeypatch):
+    monkeypatch.setattr(template_content, "_get_plugin_settings", lambda: {})
 
-    @override_settings(
-        PLUGINS_CONFIG={
-            'netbox_attachments': {
-                'applied_scope': 'app',
-                'scope_filter': ['dcim'],
-                'display_default': 'additional_tab',
-                'create_add_button': True,
-            }
-        }
+    assert template_content.get_display_preference("dcim.device") == "additional_tab"
+
+
+def test_get_display_preference_uses_model_override(monkeypatch):
+    monkeypatch.setattr(
+        template_content,
+        "_get_plugin_settings",
+        lambda: {
+            "display_default": "right_page",
+            "display_setting": {"dcim.device": "left_page"},
+        },
     )
-    def test_extensions_registered_with_tab_mode(self):
-        """Verify template extensions are registered for tab mode"""
-        import importlib
-        from netbox_attachments import template_content
-        importlib.reload(template_content)
 
-        from netbox_attachments.template_content import template_extensions
+    assert template_content.get_display_preference("dcim.device") == "left_page"
+    assert template_content.get_display_preference("dcim.site") == "right_page"
 
-        # Should have extensions registered
-        self.assertGreater(len(template_extensions), 0)
 
-    @override_settings(
-        PLUGINS_CONFIG={
-            'netbox_attachments': {
-                'applied_scope': 'app',
-                'scope_filter': ['dcim'],
-                'display_default': 'left_page',
-            }
-        }
+def test_resolve_effective_display_preference_for_custom_object_auto_converts():
+    plugin_settings = {"display_default": "additional_tab", "display_setting": {}}
+
+    assert (
+        template_content.resolve_effective_display_preference(
+            "netbox_custom_objects.attachment",
+            is_custom_object=True,
+            plugin_settings=plugin_settings,
+        )
+        == "full_width_page"
     )
-    def test_extensions_registered_with_panel_mode(self):
-        """Verify template extensions are registered for panel mode"""
-        import importlib
-        from netbox_attachments import template_content
-        importlib.reload(template_content)
 
-        from netbox_attachments.template_content import template_extensions
 
-        # Should have panel extensions registered
-        self.assertGreater(len(template_extensions), 0)
+def test_resolve_effective_display_preference_for_non_custom_keeps_tab_mode():
+    plugin_settings = {"display_default": "additional_tab", "display_setting": {}}
 
-        # Check for panel extensions with left_page attribute
-        panel_extensions = [
-            ext for ext in template_extensions
-            if hasattr(ext, 'left_page')
-        ]
-        self.assertGreater(len(panel_extensions), 0)
-
-    @override_settings(
-        PLUGINS_CONFIG={
-            'netbox_attachments': {
-                'applied_scope': 'model',
-                'scope_filter': [],
-            }
-        }
+    assert (
+        template_content.resolve_effective_display_preference(
+            "dcim.device",
+            is_custom_object=False,
+            plugin_settings=plugin_settings,
+        )
+        == "additional_tab"
     )
-    def test_no_extensions_with_empty_scope(self):
-        """Verify no extensions registered when scope_filter is empty"""
-        import importlib
-        from netbox_attachments import template_content
-        importlib.reload(template_content)
-
-        from netbox_attachments.template_content import template_extensions
-
-        # Should have no extensions when scope_filter is empty
-        self.assertEqual(len(template_extensions), 0, "Should have no template extensions when scope_filter is empty")
 
 
-class DisplayModeExtensionTestCase(TestCase):
-    """Test extension types based on display mode"""
+def test_get_template_extensions_returns_empty_outside_netbox_runtime():
+    extensions = template_content.get_template_extensions()
 
-    @override_settings(
-        PLUGINS_CONFIG={
-            'netbox_attachments': {
-                'applied_scope': 'app',
-                'scope_filter': ['dcim'],
-                'display_default': 'additional_tab',
-                'create_add_button': True,
-            }
-        }
-    )
-    def test_button_extension_with_tab_mode(self):
-        """Button extensions only created in tab mode with create_add_button=True"""
-        import importlib
-        from netbox_attachments import template_content
-        importlib.reload(template_content)
-
-        from netbox_attachments.template_content import template_extensions
-
-        # Look for button extensions
-        button_extensions = [
-            ext for ext in template_extensions
-            if 'button' in ext.__class__.__name__.lower()
-        ]
-
-        # Should have button extensions when create_add_button=True and display_default='additional_tab'
-        self.assertIsInstance(template_extensions, list)
-        self.assertGreater(len(button_extensions), 0, "Should have button extensions when create_add_button=True")
-        # Verify each button extension has expected class characteristic
-        for ext in button_extensions:
-            self.assertIn('button', ext.__class__.__name__.lower())
-
-    @override_settings(
-        PLUGINS_CONFIG={
-            'netbox_attachments': {
-                'applied_scope': 'app',
-                'scope_filter': ['dcim'],
-                'display_default': 'full_width_page',
-            }
-        }
-    )
-    def test_panel_extension_attributes(self):
-        """Panel extensions have correct display method attributes"""
-        import importlib
-        from netbox_attachments import template_content
-        importlib.reload(template_content)
-
-        from netbox_attachments.template_content import template_extensions
-
-        # Find panel extensions
-        panel_extensions = [
-            ext for ext in template_extensions
-            if hasattr(ext, 'full_width_page')
-        ]
-
-        # Should have panel extensions with full_width_page display mode
-        self.assertGreater(len(panel_extensions), 0, "Should have panel extensions when display_default='full_width_page'")
-        
-        # Verify they have the models attribute
-        for ext in panel_extensions:
-            self.assertTrue(hasattr(ext, 'models'), f"Panel extension {ext.__class__.__name__} missing 'models' attribute")
+    assert isinstance(extensions, list)

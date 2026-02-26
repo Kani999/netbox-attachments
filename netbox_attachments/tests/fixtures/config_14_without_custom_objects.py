@@ -8,20 +8,20 @@
 # - No errors or warnings related to missing plugin
 
 PLUGINS = [
-    'netbox_attachments',
+    "netbox_attachments",
     # 'netbox_custom_objects',  # Commented out - plugin not installed
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'app',
-        'scope_filter': [
-            'dcim',
-            'ipam',
-            'circuits',
-            'tenancy',
-            'virtualization',
-            'wireless',
+    "netbox_attachments": {
+        "applied_scope": "app",
+        "scope_filter": [
+            "dcim",
+            "ipam",
+            "circuits",
+            "tenancy",
+            "virtualization",
+            "wireless",
         ],
     }
 }

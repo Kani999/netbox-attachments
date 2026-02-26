@@ -7,17 +7,17 @@
 # - Complements left_page for balanced layout
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'app',
-        'scope_filter': [
-            'dcim',
-            'ipam',
+    "netbox_attachments": {
+        "applied_scope": "app",
+        "scope_filter": [
+            "dcim",
+            "ipam",
         ],
-        'display_default': 'right_page',
+        "display_default": "right_page",
     }
 }

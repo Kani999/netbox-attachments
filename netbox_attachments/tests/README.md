@@ -6,17 +6,27 @@ This directory contains the complete testing infrastructure for the netbox_attac
 
 ## Quick Start
 
-### Run All Automated Tests
+### Run All Automated Unit Tests (Primary)
+
+```bash
+cd /opt/netbox-attachments
+make test
+```
+
+This runs:
+
+```bash
+source /opt/netbox/venv/bin/activate && pytest -q
+```
+
+These tests are standalone unit tests and do not require a live PostgreSQL test database.
+
+### Run Optional Integration Tests (NetBox Runtime)
 
 ```bash
 cd /opt/netbox/netbox
-/opt/netbox/venv/bin/python manage.py test netbox_attachments.tests -v 2
-```
-
-**Expected output:**
-```
-Ran 22 tests in 0.209s
-OK (skipped=2)
+source /opt/netbox/venv/bin/activate
+python manage.py test netbox_attachments.tests -v 2
 ```
 
 ### Run Manual Web Tests
@@ -59,7 +69,7 @@ cd /opt/netbox/netbox
   - Scope filtering (app vs model modes)
   - Display modes (tab, left/right panels, full-width)
   - Per-model display overrides
-  - Button visibility
+  - Top action visibility
   - Custom objects integration
   - Graceful degradation
 
@@ -79,7 +89,7 @@ cd /opt/netbox/netbox
 | Scope Filtering | 4 | App scope, model scope, mixed mode |
 | Display Modes | 4 | Tab, left, right, full-width |
 | Display Overrides | 1 | Per-model overrides |
-| Button Control | 1 | Add button visibility |
+| Button Control | 1 | Top dropdown visibility |
 | Custom Objects | 3 | Integration, auto-conversion, missing plugin |
 | Template Extensions | 5 | Registration, types, attributes |
 | Edge Cases | 2 | Invalid config, empty scope |
@@ -102,7 +112,7 @@ The plugin includes 14 test configurations covering all supported features:
 | 6 | Right Panel | Right sidebar display | `config_06_right_page.py` |
 | 7 | Full Width | Full-width panel | `config_07_full_width.py` |
 | 8 | Mixed Display | Per-model overrides | `config_08_mixed_displays.py` |
-| 9 | Button Disabled | No upload button | `config_09_button_disabled.py` |
+| 9 | Button Disabled | No top Attachments dropdown | `config_09_button_disabled.py` |
 | 10 | Custom Objects | All custom objects | `config_10_custom_objects_only.py` |
 | 11 | Specific CO | Specific custom types | `config_11_specific_custom_objects.py` |
 | 12 | Production | Recommended config | `config_12_production.py` |
@@ -175,10 +185,10 @@ Per-model overrides for `display_default`:
 
 ### `create_add_button`
 
-Whether to show "Add Attachment" button (only in `additional_tab` mode):
+Whether to show the top "Attachments" dropdown (only in `additional_tab` mode):
 
-- **`True`** (default) - Show button, users can upload attachments
-- **`False`** - Hide button, view-only mode (requires pre-existing attachments)
+- **`True`** (default) - Show top dropdown with available actions
+- **`False`** - Hide top dropdown, view-only mode (requires pre-existing attachments)
 
 ---
 
@@ -450,14 +460,14 @@ display_setting: {
 
 **Configuration:** `fixtures/config_09_button_disabled.py`
 
-Disable the "Add Attachment" button for view-only mode.
+Disable the top "Attachments" dropdown for view-only mode.
 
 **Tests:**
 - `CreateAddButtonTestCase.test_button_disabled`
 
 **Web Testing:**
 - Device detail page → Attachments tab visible
-- "Add Attachment" button NOT visible
+- Top "Attachments" dropdown NOT visible
 - Can view existing attachments
 - Cannot upload new attachments (view-only mode)
 
@@ -836,10 +846,10 @@ cd /opt/netbox/netbox
 4. Clear browser cache (Ctrl+Shift+Delete)
 5. Restart server and refresh page
 
-### "Add Attachment" Button Not Visible
+### Top "Attachments" Dropdown Not Visible
 
 1. Check `create_add_button` is not False
-2. Check `display_default` is 'additional_tab' (button only shown in tab mode)
+2. Check `display_default` is 'additional_tab' (top dropdown only shown in tab mode)
 3. Verify user has appropriate permissions
 4. Clear browser cache
 

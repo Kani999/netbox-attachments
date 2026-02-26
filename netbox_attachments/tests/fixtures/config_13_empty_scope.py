@@ -8,13 +8,13 @@
 # - Edge case: effective way to disable plugin without uninstalling
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'model',
-        'scope_filter': [],
+    "netbox_attachments": {
+        "applied_scope": "model",
+        "scope_filter": [],
     }
 }

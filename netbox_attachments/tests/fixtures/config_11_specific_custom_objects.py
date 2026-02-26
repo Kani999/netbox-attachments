@@ -10,15 +10,15 @@
 # Note: Replace 'attachment' with actual CustomObjectType name in your environment
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'model',
-        'scope_filter': [
-            'netbox_custom_objects.attachment',
+    "netbox_attachments": {
+        "applied_scope": "model",
+        "scope_filter": [
+            "netbox_custom_objects.attachment",
         ],
     }
 }

@@ -9,21 +9,21 @@
 # - Demonstrates per-model customization
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'app',
-        'scope_filter': [
-            'dcim',
+    "netbox_attachments": {
+        "applied_scope": "app",
+        "scope_filter": [
+            "dcim",
         ],
-        'display_default': 'additional_tab',
-        'display_setting': {
-            'dcim.device': 'full_width_page',
-            'dcim.site': 'left_page',
-            'dcim.rack': 'right_page',
+        "display_default": "additional_tab",
+        "display_setting": {
+            "dcim.device": "full_width_page",
+            "dcim.site": "left_page",
+            "dcim.rack": "right_page",
         },
     }
 }

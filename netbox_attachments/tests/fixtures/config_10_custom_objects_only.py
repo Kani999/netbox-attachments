@@ -8,15 +8,15 @@
 # - Requires netbox_custom_objects plugin installed
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'app',
-        'scope_filter': [
-            'netbox_custom_objects',
+    "netbox_attachments": {
+        "applied_scope": "app",
+        "scope_filter": [
+            "netbox_custom_objects",
         ],
     }
 }
