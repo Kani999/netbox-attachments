@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="180" viewBox="0 0 640 180" role="img" aria-label="NetBox Attachments logo">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0f4c81"/>
+      <stop offset="100%" stop-color="#1f8a70"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="180" rx="18" fill="#f4f7f9"/>
+  <rect x="24" y="24" width="132" height="132" rx="20" fill="url(#g)"/>
+  <path d="M66 72h50v12H66zM66 94h50v12H66zM66 116h34v12H66z" fill="#ffffff"/>
+  <circle cx="116" cy="124" r="13" fill="#ffd166"/>
+  <path d="M114 114h4v8h-4zM114 124h4v8h-4z" fill="#0f4c81"/>
+  <text x="176" y="88" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" fill="#102a43">NetBox Attachments</text>
+  <text x="176" y="124" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#334e68">Plugin for object file associations</text>
+</svg>
