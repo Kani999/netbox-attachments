@@ -25,6 +25,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+test = ["django>=5.0", "pytest"]
+
 [project.urls]
 Homepage = "https://github.com/Kani999/netbox-attachments"
 Source = "https://github.com/Kani999/netbox-attachments"
