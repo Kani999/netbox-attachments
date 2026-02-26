@@ -8,3 +8,4 @@ build/
 /contrib/
 /pynetbox_test.py
 CLAUDE.md
+ignore/
