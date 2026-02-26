@@ -2,7 +2,21 @@ from pathlib import Path
 
 from django.conf import settings
 
-PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("netbox_attachments", {})
+
+def _get_plugin_settings():
+    try:
+        plugins_config = getattr(settings, "PLUGINS_CONFIG", {})
+    except Exception:
+        return {}
+
+    if not isinstance(plugins_config, dict):
+        return {}
+
+    plugin_settings = plugins_config.get("netbox_attachments", {})
+    if not isinstance(plugin_settings, dict):
+        return {}
+
+    return plugin_settings
 
 
 def choice_default(value, choices, default=None):
@@ -23,13 +37,12 @@ def attachment_upload(instance, filename):
     """
     Generate a file upload path for an attachment.
 
-    Constructs an upload path using a fixed directory prefix ("netbox-attachments/"), the
-    instance's object type name, object ID, and a filename. If the provided filename differs
-    from the instance's name, the filename is updated to match the instance's name while preserving
-    its original file extension(s).
+    Constructs an upload path using a fixed directory prefix ("netbox-attachments/") and
+    the filename. If the provided filename differs from the instance's name, the filename
+    is updated to match the instance's name while preserving its original file extension(s).
 
     Args:
-        instance: A model instance with attributes 'name', 'object_type', and 'object_id'.
+        instance: A model instance with a 'name' attribute.
         filename: The original filename; its extension(s) are preserved if a rename is applied.
 
     Returns:
@@ -37,14 +50,12 @@ def attachment_upload(instance, filename):
     """
     path = "netbox-attachments/"
 
-    if instance.name != filename:
+    if instance.name and instance.name != filename:
         # Rename the file to the provided name, if any. Attempt to preserve the file extension.
         extension = "".join(Path(filename).suffixes)
         filename = "".join([instance.name, extension])
 
-    return "{}{}_{}_{}".format(
-        path, instance.object_type.name, instance.object_id, filename
-    )
+    return "{}{}".format(path, filename)
 
 
 def is_custom_object_model(model):
@@ -61,16 +72,13 @@ def is_custom_object_model(model):
     Returns:
         bool: True if this is a custom object model, False otherwise
     """
-    if model._meta.app_label != 'netbox_custom_objects':
+    if model._meta.app_label != "netbox_custom_objects":
         return False
 
     try:
         from netbox_custom_objects.models import CustomObject
-        return (
-            issubclass(model, CustomObject) and
-            model is not CustomObject and
-            not model._meta.abstract
-        )
+
+        return issubclass(model, CustomObject) and model is not CustomObject and not model._meta.abstract
     except (ImportError, AttributeError):
         return False
 
@@ -96,12 +104,9 @@ def validate_object_type(model):
     Returns:
         bool: True if the model is allowed to have attachments; False otherwise.
     """
-    applied_scope = choice_default(
-        PLUGIN_SETTINGS.get("applied_scope"),
-        ("app", "model"),
-        "app"
-    )
-    scope_filter = PLUGIN_SETTINGS.get("scope_filter")
+    plugin_settings = _get_plugin_settings()
+    applied_scope = choice_default(plugin_settings.get("applied_scope"), ("app", "model"), "app")
+    scope_filter = plugin_settings.get("scope_filter")
     if scope_filter is None or not isinstance(scope_filter, (list, tuple, set)):
         scope_filter = []
 
@@ -110,6 +115,7 @@ def validate_object_type(model):
     if is_custom_object_model(model):
         try:
             from netbox_custom_objects.models import CustomObjectType
+
             cot = CustomObjectType.objects.get(id=model.custom_object_type_id)
             model_identifier = f"{model._meta.app_label}.{cot.name}"
         except (ImportError, AttributeError, CustomObjectType.DoesNotExist):
@@ -129,3 +135,47 @@ def validate_object_type(model):
         return app_label in scope_filter or model_identifier in scope_filter
 
     return False
+
+
+def get_enabled_object_type_queryset():
+    """
+    Returns an ObjectType queryset limited to models enabled in the plugin config.
+    Used by the link form to restrict the object type picker to valid choices.
+    """
+    from functools import reduce
+    from operator import or_
+
+    from django.apps import apps
+    from django.db.models import Q
+
+    from core.models.object_types import ObjectType
+
+    q_filters = []
+    seen = set()
+
+    # Standard models
+    for model in apps.get_models():
+        key = f"{model._meta.app_label}.{model._meta.model_name}"
+        if key in seen:
+            continue
+        seen.add(key)
+        if validate_object_type(model):
+            q_filters.append(Q(app_label=model._meta.app_label, model=model._meta.model_name))
+
+    # Custom objects (gracefully absent if plugin not installed)
+    try:
+        custom_app = apps.get_app_config("netbox_custom_objects")
+        for model in custom_app.get_models():
+            key = f"{model._meta.app_label}.{model._meta.model_name}"
+            if key in seen:
+                continue
+            seen.add(key)
+            if validate_object_type(model):
+                q_filters.append(Q(app_label=model._meta.app_label, model=model._meta.model_name))
+    except (LookupError, ImportError):
+        pass
+
+    if not q_filters:
+        return ObjectType.objects.none()
+
+    return ObjectType.objects.filter(reduce(or_, q_filters))

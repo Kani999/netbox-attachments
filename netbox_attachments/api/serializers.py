@@ -5,33 +5,30 @@ from netbox.api.serializers import NetBoxModelSerializer
 from rest_framework import serializers
 from utilities.api import get_serializer_for_model
 
-from netbox_attachments.models import NetBoxAttachment
+from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 
 
-class NetBoxAttachmentSerializer(NetBoxModelSerializer):
+class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name="plugins-api:netbox_attachments-api:netboxattachment-detail"
+        view_name="plugins-api:netbox_attachments-api:netboxattachmentassignment-detail"
     )
     object_type = ContentTypeField(queryset=ObjectType.objects.all())
     parent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = NetBoxAttachment
+        model = NetBoxAttachmentAssignment
         fields = [
             "id",
             "url",
             "display",
+            "attachment",
             "object_type",
             "object_id",
             "parent",
-            "name",
-            "description",
-            "file",
             "created",
             "last_updated",
-            "comments",
         ]
-        brief_fields = ("id", "url", "display", "name", "description", "file")
+        brief_fields = ("id", "url", "display", "object_type", "object_id")
 
     def validate(self, data):
         # Validate that the parent object exists
@@ -40,41 +37,45 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
                 data["object_type"].get_object_for_this_type(id=data["object_id"])
         except ObjectDoesNotExist:
             raise serializers.ValidationError(
-                "Invalid parent object: {} ID {}".format(
-                    data["object_type"], data["object_id"]
-                )
+                "Invalid parent object: {} ID {}".format(data["object_type"], data["object_id"])
             )
+        return super().validate(data)
 
-        # Enforce model validation and capture any upstream mutations
-        validated_data = super().validate(data)
-
-        return validated_data
-
-    # @swagger_serializer_method(serializer_or_field=serializers.JSONField)
     def get_parent(self, obj):
-        # Check for required fields first to avoid unnecessary DB lookups
-        if not (
-            hasattr(obj, "object_type_id")
-            and obj.object_type_id
-            and hasattr(obj, "object_id")
-            and obj.object_id
-        ):
-            return None
-
-        # Only wrap the parent dereference in try/except to let other errors bubble
         try:
             parent = obj.parent
         except ObjectDoesNotExist:
-            # Handle case where parent object doesn't exist
             return None
 
         if parent is None:
             return None
 
-        # Get serializer for the parent's class, not the instance
         serializer = get_serializer_for_model(parent.__class__)
-        return serializer(
-            parent,
-            nested=True,
-            context=self.context,
-        ).data
+        return serializer(parent, nested=True, context=self.context).data
+
+
+class NetBoxAttachmentSerializer(NetBoxModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="plugins-api:netbox_attachments-api:netboxattachment-detail")
+    assignments = NetBoxAttachmentAssignmentSerializer(
+        source="attachment_assignments",
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = NetBoxAttachment
+        fields = [
+            "id",
+            "url",
+            "display",
+            "name",
+            "description",
+            "file",
+            "size",
+            "assignments",
+            "created",
+            "last_updated",
+            "comments",
+            "tags",
+        ]
+        brief_fields = ("id", "url", "display", "name", "description", "file")
