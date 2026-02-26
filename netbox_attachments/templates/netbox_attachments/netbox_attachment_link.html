@@ -1,0 +1,22 @@
+{% extends "generic/object_edit.html" %}
+{% load helpers %}
+{% load form_helpers %}
+{% block form %}
+    <div class="field-group mb-5">
+        {% if object.object_type and object.object_id %}
+            {# Forward flow: object is pre-set, show read-only info #}
+            <div class="row mb-3">
+                <label class="col-sm-3 col-form-label text-lg-end">Link To</label>
+                <div class="col-sm-9">
+                    <div class="form-control-plaintext">
+                        {{ object.object_type }} #{{ object.object_id }}
+                    </div>
+                </div>
+            </div>
+            {% render_field form.attachment %}
+        {% else %}
+            {# Reverse flow: let user pick the target object #}
+            {% render_form form %}
+        {% endif %}
+    </div>
+{% endblock form %}

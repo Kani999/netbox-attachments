@@ -1,0 +1,39 @@
+{% extends "generic/object_delete.html" %}
+{% load helpers %}
+{% block title %}Unlink Attachment{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col col-md-6 offset-md-3">
+        <div class="card">
+            <h5 class="card-header text-danger">
+                <i class="mdi mdi-alert" aria-hidden="true"></i>
+                Confirm Unlink
+            </h5>
+            <div class="card-body">
+                <p>
+                    Are you sure you want to unlink
+                    <strong>{{ attachment }}</strong>
+                    from
+                    <strong>
+                        {% if object.parent %}
+                            {{ object.parent }}
+                        {% else %}
+                            {{ object.object_type }} #{{ object.object_id }}
+                        {% endif %}
+                    </strong>?
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ return_url }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="mdi mdi-link-off" aria-hidden="true"></i>
+                            Unlink
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

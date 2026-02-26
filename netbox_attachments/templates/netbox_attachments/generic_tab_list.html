@@ -21,6 +21,13 @@
                         Add Attachment
                     </a>
                 {% endif %}
+                {% if perms.netbox_attachments.add_netboxattachmentassignment %}
+                    <a href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path }}"
+                       class="btn btn-secondary">
+                        <i class="mdi mdi-link-variant" aria-hidden="true"></i>
+                        Link Existing
+                    </a>
+                {% endif %}
             </div>
         </div>
     {% endblock content %}
