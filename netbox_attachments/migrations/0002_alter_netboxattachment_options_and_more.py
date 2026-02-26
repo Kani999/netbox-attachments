@@ -4,20 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('netbox_attachments', '0001_initial'),
+        ("netbox_attachments", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='netboxattachment',
-            options={'ordering': ('name', 'pk'), 'verbose_name': 'NetBox Attachment',
-                     'verbose_name_plural': 'NetBox Attachments'},
+            name="netboxattachment",
+            options={
+                "ordering": ("name", "pk"),
+                "verbose_name": "NetBox Attachment",
+                "verbose_name_plural": "NetBox Attachments",
+            },
         ),
         migrations.AddField(
-            model_name='netboxattachment',
-            name='comments',
+            model_name="netboxattachment",
+            name="comments",
             field=models.TextField(blank=True),
         ),
     ]

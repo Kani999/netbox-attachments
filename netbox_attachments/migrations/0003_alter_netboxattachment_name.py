@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('netbox_attachments', '0002_alter_netboxattachment_options_and_more'),
+        ("netbox_attachments", "0002_alter_netboxattachment_options_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='netboxattachment',
-            name='name',
+            model_name="netboxattachment",
+            name="name",
             field=models.CharField(blank=True, max_length=254),
         ),
     ]
