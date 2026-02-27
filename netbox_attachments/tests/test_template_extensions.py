@@ -53,3 +53,4 @@ def test_get_template_extensions_returns_empty_outside_netbox_runtime():
     extensions = template_content.get_template_extensions()
 
     assert isinstance(extensions, list)
+    assert extensions == []

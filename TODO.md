@@ -48,7 +48,7 @@ A future improvement would let users assign one attachment to **multiple objects
 
 Starting scope: same object type only (avoids mixed-type API complexity).
 
-### 10. Plugin certification remediation status (NetBox 4.5.x)
+### 4. Plugin certification remediation status (NetBox 4.5.x)
 
 External maintainer actions remaining:
 
