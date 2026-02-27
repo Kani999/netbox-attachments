@@ -4,7 +4,6 @@ These tests replicate the handler logic using mocks to avoid importing
 netbox_attachments.models (which requires a live NetBox/Django environment).
 """
 
-import numbers
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -27,15 +26,16 @@ def _make_handler(ObjectType, NetBoxAttachmentAssignment, own_models):
     def pre_delete_receiver(sender, instance, **kwargs):
         if sender in own_models:
             return
-        if not isinstance(instance.pk, numbers.Integral):
-            return
         try:
             object_type = ObjectType.objects.get_for_model(instance)
         except ObjectType.DoesNotExist:
             return
-        NetBoxAttachmentAssignment.objects.filter(
-            object_type_id=object_type.id, object_id=instance.pk
-        ).delete()
+        try:
+            NetBoxAttachmentAssignment.objects.filter(
+                object_type_id=object_type.id, object_id=instance.pk
+            ).delete()
+        except (TypeError, ValueError):
+            return
 
     return pre_delete_receiver
 
@@ -109,16 +109,24 @@ def test_pre_delete_receiver_skips_own_models():
 
 
 def test_pre_delete_receiver_skips_non_integral_pk():
-    """Handler is a no-op when the instance PK is not an integer."""
+    """Handler is a no-op when the instance PK is not an integer (TypeError/ValueError from filter)."""
+    fake_ot = MagicMock()
+    fake_ot.id = 5
+
     FakeObjectType = MagicMock()
     FakeObjectType.DoesNotExist = _FakeDoesNotExist
+    FakeObjectType.objects.get_for_model.return_value = fake_ot
 
+    mock_qs = MagicMock()
+    mock_qs.delete.side_effect = TypeError("Field expected a number")
     FakeAssignment = MagicMock()
+    FakeAssignment.objects.filter.return_value = mock_qs
 
     handler = _make_handler(FakeObjectType, FakeAssignment, own_models=())
 
     instance = make_fake_instance(pk="not-an-int")
-    handler(sender=object, instance=instance)
+    handler(sender=object, instance=instance)  # must not raise
 
-    FakeObjectType.objects.get_for_model.assert_not_called()
-    FakeAssignment.objects.filter.assert_not_called()
+    FakeObjectType.objects.get_for_model.assert_called_once_with(instance)
+    FakeAssignment.objects.filter.assert_called_once_with(object_type_id=5, object_id="not-an-int")
+    mock_qs.delete.assert_called_once()

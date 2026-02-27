@@ -1,4 +1,3 @@
-import numbers
 import os
 
 from core.models.object_types import ObjectType
@@ -156,18 +155,17 @@ def pre_delete_receiver(sender, instance, **kwargs):
     if sender in (NetBoxAttachment, NetBoxAttachmentAssignment):
         return
 
-    # Workaround: only run signals on Models where PK is Integral
-    # https://github.com/Kani999/netbox-attachments/issues/44
-    if not isinstance(instance.pk, numbers.Integral):
-        return
-
     try:
         object_type = ObjectType.objects.get_for_model(instance)
     except ObjectType.DoesNotExist:
         return
 
-    # Delete the assignments for this object; attachments are left intact
-    # (QuerySet.delete() is a no-op on an empty queryset — no need for .exists() guard)
-    NetBoxAttachmentAssignment.objects.filter(
-        object_type_id=object_type.id, object_id=instance.pk
-    ).delete()
+    try:
+        # Delete the assignments for this object; attachments are left intact
+        # (QuerySet.delete() is a no-op on an empty queryset — no need for .exists() guard)
+        NetBoxAttachmentAssignment.objects.filter(
+            object_type_id=object_type.id, object_id=instance.pk
+        ).delete()
+    except (TypeError, ValueError):
+        # instance.pk is not an integer type — no assignments can exist for it
+        return
