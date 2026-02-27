@@ -14,9 +14,11 @@ from utilities.forms.fields import (
     DynamicModelChoiceField,
     TagFilterField,
 )
+from django.urls import NoReverseMatch
 from utilities.forms.utils import get_field_value
 from utilities.forms.widgets import HTMXSelect
 from utilities.forms.widgets.apiselect import APISelect
+from utilities.views import get_action_url
 
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 from netbox_attachments.utils import get_enabled_object_type_queryset
@@ -112,14 +114,29 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
                 try:
                     obj_type = ObjectType.objects.get(pk=object_type_id)
                     model = obj_type.model_class()
-                    self.fields["object"].queryset = model.objects.all()
-                    self.fields["object"].model = model  # update field's model ref for selector
-                    self.fields["object"].selector = True  # now safe: model is the real target
-                    self.fields["object"].widget.attrs["selector"] = (
-                        model._meta.label_lower
-                    )  # bake into widget attrs for template
-                    self.fields["object"].disabled = False
-                    self.fields["object"].label = _(model._meta.verbose_name.title())
+                    # Probe whether a REST API list URL exists for this model
+                    try:
+                        get_action_url(model, action="list", rest_api=True)
+                        api_available = True
+                    except NoReverseMatch:
+                        api_available = False
+
+                    if api_available:
+                        self.fields["object"].queryset = model.objects.all()
+                        self.fields["object"].model = model  # update field's model ref for selector
+                        self.fields["object"].selector = True  # now safe: model is the real target
+                        self.fields["object"].widget.attrs["selector"] = (
+                            model._meta.label_lower
+                        )  # bake into widget attrs for template
+                        self.fields["object"].disabled = False
+                        self.fields["object"].label = _(model._meta.verbose_name.title())
+                    else:
+                        # Model has no REST API endpoint — use a static ModelChoiceField
+                        self.fields["object"] = forms.ModelChoiceField(
+                            queryset=model.objects.all(),
+                            required=True,
+                            label=_(model._meta.verbose_name.title()),
+                        )
                 except ObjectType.DoesNotExist:
                     pass  # Type not found; object picker stays disabled
                 except (AttributeError, TypeError):
