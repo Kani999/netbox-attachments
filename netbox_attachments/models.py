@@ -161,11 +161,13 @@ def pre_delete_receiver(sender, instance, **kwargs):
     if not isinstance(instance.pk, numbers.Integral):
         return
 
-    object_type = ObjectType.objects.get_for_model(instance)
-    assignments = NetBoxAttachmentAssignment.objects.filter(object_type_id=object_type.id, object_id=instance.pk)
-
-    if not assignments.exists():
+    try:
+        object_type = ObjectType.objects.get_for_model(instance)
+    except ObjectType.DoesNotExist:
         return
 
     # Delete the assignments for this object; attachments are left intact
-    assignments.delete()
+    # (QuerySet.delete() is a no-op on an empty queryset — no need for .exists() guard)
+    NetBoxAttachmentAssignment.objects.filter(
+        object_type_id=object_type.id, object_id=instance.pk
+    ).delete()
