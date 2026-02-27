@@ -53,7 +53,7 @@
           Assigned To
           <div class="card-actions">
             {% if perms.netbox_attachments.add_netboxattachmentassignment %}
-              <a href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?attachment={{ object.pk }}&return_url={{ request.path }}"
+              <a href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?attachment={{ object.pk }}&return_url={{ request.path|urlencode }}"
                  class="btn btn-ghost-primary btn-sm">
                 <i class="mdi mdi-link-variant" aria-hidden="true"></i> Assign to Object
               </a>

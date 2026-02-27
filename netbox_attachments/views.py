@@ -2,6 +2,7 @@ from core.models.object_types import ObjectType
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from netbox.views import generic
 from utilities.views import register_model_view
 
@@ -113,15 +114,18 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
 
 class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
     """
-    Unlinks an attachment assignment.
-    If it was the last assignment, deletes the attachment (and file) as well.
+    Unlinks an attachment assignment from an object.
+    The attachment itself is preserved and can be re-linked to other objects.
     """
 
     queryset = models.NetBoxAttachmentAssignment.objects.all()
     default_return_url = "plugins:netbox_attachments:netboxattachment_list"
 
     def post(self, request, *args, **kwargs):
-        assignment = get_object_or_404(models.NetBoxAttachmentAssignment, pk=kwargs["pk"])
+        assignment = get_object_or_404(
+            models.NetBoxAttachmentAssignment.objects.restrict(request.user, "delete"),
+            pk=kwargs["pk"],
+        )
         attachment = assignment.attachment
 
         # Delete the assignment only; the attachment persists
@@ -132,10 +136,9 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
             f"Attachment '{attachment}' has been unlinked from this object.",
         )
 
-        return_url = request.GET.get(
-            "return_url",
-            reverse("plugins:netbox_attachments:netboxattachment_list"),
-        )
+        return_url = request.GET.get("return_url")
+        if not return_url or not url_has_allowed_host_and_scheme(return_url, allowed_hosts={request.get_host()}):
+            return_url = reverse("plugins:netbox_attachments:netboxattachment_list")
         return redirect(return_url)
 
     def get(self, request, *args, **kwargs):

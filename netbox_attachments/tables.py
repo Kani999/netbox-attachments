@@ -10,7 +10,7 @@ ATTACHMENT_LINK = """
 """
 FILE_SIZE = "{{ record.size|filesizeformat }}"
 DOWNLOAD_BUTTON = """
-<a href="{{record.file.url}}" target="_blank" class="btn btn-sm btn-primary download-attachment" title="Download">
+<a href="{{record.file.url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary download-attachment" title="Download">
   <i class="mdi mdi-download"></i>
 </a>
 {% if perms.netbox_attachments.add_netboxattachmentassignment %}
@@ -56,7 +56,7 @@ ASSIGNMENT_PARENT_COLUMN = """
 """
 
 UNLINK_BUTTON = """
-<a href="{% url 'plugins:netbox_attachments:netboxattachmentassignment_delete' pk=record.pk %}?return_url={{ request.path }}"
+<a href="{% url 'plugins:netbox_attachments:netboxattachmentassignment_delete' pk=record.pk %}?return_url={{ request.path|urlencode }}"
    class="btn btn-sm btn-danger"
    title="Unlink">
     <i class="mdi mdi-link-off"></i>
