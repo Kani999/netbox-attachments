@@ -18,7 +18,7 @@ This file maps certification requirements to evidence in this repository and ide
   - Evidence: [docs/installation.md](installation.md), [docs/configuration.md](configuration.md)
 
 - [x] Usage/API documentation is available
-  - Evidence: [docs/usage.md](usage.md), [pynetbox_upload_example.py](../pynetbox_upload_example.py)
+  - Evidence: [docs/usage.md](usage.md)
 
 - [x] Changelog/release notes are maintained
   - Evidence: [CHANGELOG.md](../CHANGELOG.md), [docs/release-process.md](release-process.md)
