@@ -58,7 +58,7 @@ class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):
             return queryset.filter(attachment_assignments__isnull=True).distinct()
 
     def filter_has_broken_assignments(self, queryset, name, value):
-        broken_ids = [ot.id for ot in ObjectType.objects.all() if ot.model_class() is None]
+        broken_ids = [ot.id for ot in ObjectType.objects.only("id").iterator() if ot.model_class() is None]
         if value:
             return queryset.filter(attachment_assignments__object_type_id__in=broken_ids).distinct()
         return queryset.exclude(attachment_assignments__object_type_id__in=broken_ids).distinct()

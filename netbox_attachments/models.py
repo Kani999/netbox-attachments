@@ -118,6 +118,9 @@ class NetBoxAttachmentAssignment(NetBoxModel):
                 name="unique_attachment_assignment",
             )
         ]
+        indexes = [
+            models.Index(fields=["object_type", "object_id"], name="nba_assign_obj_type_id_idx"),
+        ]
 
     def __str__(self):
         parent = self.parent
