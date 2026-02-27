@@ -1,4 +1,5 @@
 {# Attachments dropdown shown on object detail pages when create_add_button is enabled #}
+{% load i18n %}
 {% if perms.netbox_attachments.add_netboxattachment or perms.netbox_attachments.add_netboxattachmentassignment %}
     {% if object_type_attachment_list %}
         {% url object_type_attachment_list pk=object.pk as attachment_return_url %}
@@ -6,7 +7,7 @@
     <div class="btn-group" role="group">
         <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="mdi mdi-paperclip" aria-hidden="true"></i>
-            Attachments
+            {% trans "Attachments" %}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
             {% if perms.netbox_attachments.add_netboxattachment %}
@@ -14,7 +15,7 @@
                     <a class="dropdown-item"
                        href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% firstof attachment_return_url request.path %}">
                         <i class="mdi mdi-plus-thick" aria-hidden="true"></i>
-                        Add Attachment
+                        {% trans "Add Attachment" %}
                     </a>
                 </li>
             {% endif %}
@@ -23,7 +24,7 @@
                     <a class="dropdown-item"
                        href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% firstof attachment_return_url request.path %}">
                         <i class="mdi mdi-link-variant" aria-hidden="true"></i>
-                        Link Existing
+                        {% trans "Link Existing" %}
                     </a>
                 </li>
             {% endif %}

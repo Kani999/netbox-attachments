@@ -31,14 +31,18 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
         brief_fields = ("id", "url", "display", "object_type", "object_id")
 
     def validate(self, data):
-        # Validate that the parent object exists
-        try:
-            if "object_type" in data and "object_id" in data:
-                data["object_type"].get_object_for_this_type(id=data["object_id"])
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError(
-                "Invalid parent object: {} ID {}".format(data["object_type"], data["object_id"])
-            )
+        # Validate that the parent object exists.
+        # Fall back to instance values so PATCH requests that only supply one
+        # of the two fields are still validated against the full pair.
+        object_type = data.get("object_type", getattr(self.instance, "object_type", None))
+        object_id = data.get("object_id", getattr(self.instance, "object_id", None))
+        if object_type is not None and object_id is not None:
+            try:
+                object_type.get_object_for_this_type(id=object_id)
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError(
+                    "Invalid parent object: {} ID {}".format(object_type, object_id)
+                )
         return super().validate(data)
 
     def get_parent(self, obj):
