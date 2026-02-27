@@ -42,7 +42,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
             except ObjectDoesNotExist:
                 raise serializers.ValidationError(
                     "Invalid parent object: {} ID {}".format(object_type, object_id)
-                )
+                ) from None
         return super().validate(data)
 
     def get_parent(self, obj):
