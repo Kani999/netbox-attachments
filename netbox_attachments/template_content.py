@@ -48,11 +48,10 @@ def resolve_effective_display_preference(
 
 
 def render_attachment_panel(self) -> str:
-    model_name = self.models[0] if hasattr(self, "models") else self.model
+    model_name = self.models[0] if (hasattr(self, "models") and self.models) else self.model
     if "." not in str(model_name):
         logger.error(f"Invalid model name format: {model_name!r}")
         return ""
-    app_label, _ = model_name.split(".", 1)
     try:
         return self.render("netbox_attachments/netbox_attachment_panel.html")
     except Exception as exc:
