@@ -110,29 +110,29 @@ def validate_object_type(model):
     if scope_filter is None or not isinstance(scope_filter, (list, tuple, set)):
         scope_filter = []
 
-    # Get the model identifier
-    # For custom objects, use CustomObjectType name; for standard models, use model_name
-    if is_custom_object_model(model):
-        try:
-            from netbox_custom_objects.models import CustomObjectType
-
-            cot = CustomObjectType.objects.get(id=model.custom_object_type_id)
-            model_identifier = f"{model._meta.app_label}.{cot.name}"
-        except (ImportError, AttributeError, CustomObjectType.DoesNotExist):
-            return False
-    else:
-        model_identifier = f"{model._meta.app_label}.{model._meta.model_name}"
-
     app_label = model._meta.app_label
 
     if applied_scope == "app":
-        # App mode: only check app_label
+        # App mode: only app_label matters — no DB access needed.
         return app_label in scope_filter
 
     elif applied_scope == "model":
-        # Model mode: check BOTH app_label (whole app) AND model_identifier (specific model)
-        # This supports mixed mode: ['dcim', 'ipam.ipaddress', 'netbox_custom_objects.attachment']
-        return app_label in scope_filter or model_identifier in scope_filter
+        # Short-circuit on app_label first (no DB access needed).
+        if app_label in scope_filter:
+            return True
+        # Need model_identifier for the specific-model check.
+        # For custom objects, resolve the identifier via DB (only when necessary).
+        if is_custom_object_model(model):
+            try:
+                from netbox_custom_objects.models import CustomObjectType
+
+                cot = CustomObjectType.objects.get(id=model.custom_object_type_id)
+                model_identifier = f"{model._meta.app_label}.{cot.name}"
+            except (ImportError, AttributeError, CustomObjectType.DoesNotExist):
+                return False
+        else:
+            model_identifier = f"{model._meta.app_label}.{model._meta.model_name}"
+        return model_identifier in scope_filter
 
     return False
 
