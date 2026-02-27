@@ -1,7 +1,5 @@
 # NetBox Attachments Plugin
 
-![NetBox Attachments Logo](docs/img/netbox-attachments-logo.svg)
-
 [NetBox](https://github.com/netbox-community/netbox) plugin for attaching files to NetBox objects.
 
 ## Overview
@@ -117,12 +115,14 @@ Project release history follows Keep a Changelog:
 
 ## Screenshots
 
-- **Model View**
-  ![Platform attachments](docs/img/platform.png)
-- **List View**
-  ![List View](docs/img/list.PNG)
-- **Detail View**
-  ![Detail View](docs/img/detail.PNG)
+- **Attachment List**
+  ![Attachment list view](docs/img/attachment_list.png)
+- **Attachment Detail**
+  ![Attachment detail view](docs/img/attachment_detail.png)
+- **Object Attachments Tab**
+  ![Object attachments tab](docs/img/object_attachment_detail.png)
+- **Create Assignment**
+  ![Create assignment form](docs/img/attachment_assignment.png)
 
 ## License
 
