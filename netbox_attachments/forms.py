@@ -1,5 +1,3 @@
-import logging
-
 from core.models.object_types import ObjectType
 from django import forms
 from django.utils.translation import gettext as _
@@ -23,9 +21,6 @@ from utilities.views import get_action_url
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 from netbox_attachments.utils import get_enabled_object_type_queryset
 
-logger = logging.getLogger(__name__)
-
-
 class NetBoxAttachmentForm(NetBoxModelForm):
     comments = CommentField(label="Comment")
 
@@ -39,35 +34,57 @@ class NetBoxAttachmentForm(NetBoxModelForm):
             "tags",
         ]
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        pending_type_id = getattr(self.instance, "_pending_object_type_id", None)
+        pending_obj_id = getattr(self.instance, "_pending_object_id", None)
+
+        # No assignment context provided (e.g. add from attachment list) is valid.
+        if pending_type_id is None and pending_obj_id is None:
+            return cleaned_data
+
+        # Enforce complete context when assignment params are present.
+        if not pending_type_id or not pending_obj_id:
+            raise forms.ValidationError(_("Invalid assignment target context."))
+
+        try:
+            pending_type_id = int(pending_type_id)
+            pending_obj_id = int(pending_obj_id)
+        except (TypeError, ValueError):
+            raise forms.ValidationError(_("Invalid assignment target identifiers."))
+
+        object_type = get_enabled_object_type_queryset().filter(pk=pending_type_id).first()
+        if object_type is None:
+            raise forms.ValidationError(_("Attachments are not permitted for this object type."))
+
+        model = object_type.model_class()
+        if model is None:
+            raise forms.ValidationError(_("Invalid assignment target model."))
+
+        if not model.objects.filter(pk=pending_obj_id).exists():
+            raise forms.ValidationError(_("The target object does not exist."))
+
+        self._validated_pending_object_type = object_type
+        self._validated_pending_object_id = pending_obj_id
+        return cleaned_data
+
     def save(self, commit=True):
         """
         After saving the attachment, create an assignment if pending context is set.
         The view's alter_object() sets _pending_object_type_id and _pending_object_id
         on the instance to pass context into this save() method.
         """
-        pending_type_id = getattr(self.instance, "_pending_object_type_id", None)
-        pending_obj_id = getattr(self.instance, "_pending_object_id", None)
-
         obj = super().save(commit=commit)
 
-        if pending_type_id and pending_obj_id and commit:
-            from core.models.object_types import ObjectType
-
-            from netbox_attachments.models import NetBoxAttachmentAssignment
-
-            try:
-                object_type = ObjectType.objects.get(pk=int(pending_type_id))
+        if commit:
+            object_type = getattr(self, "_validated_pending_object_type", None)
+            object_id = getattr(self, "_validated_pending_object_id", None)
+            if object_type is not None and object_id is not None:
                 NetBoxAttachmentAssignment.objects.get_or_create(
                     attachment=obj,
                     object_type=object_type,
-                    object_id=int(pending_obj_id),
-                )
-            except (ObjectType.DoesNotExist, ValueError) as e:
-                logger.warning(
-                    "Failed to create attachment assignment: object_type_id=%s object_id=%s: %s",
-                    pending_type_id,
-                    pending_obj_id,
-                    e,
+                    object_id=object_id,
                 )
 
         return obj
