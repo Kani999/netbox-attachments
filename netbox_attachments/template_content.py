@@ -49,16 +49,12 @@ def resolve_effective_display_preference(
 
 def render_attachment_panel(self) -> str:
     model_name = self.models[0] if hasattr(self, "models") else self.model
-    app_label, _ = model_name.split(".")
-
+    if "." not in str(model_name):
+        logger.error(f"Invalid model name format: {model_name!r}")
+        return ""
+    app_label, _ = model_name.split(".", 1)
     try:
-        from core.models.object_types import ObjectType
-
-        try:
-            return self.render("netbox_attachments/netbox_attachment_panel.html")
-        except ObjectType.DoesNotExist:
-            logger.error(f"ObjectType for {app_label} {self.model} does not exist")
-            return ""
+        return self.render("netbox_attachments/netbox_attachment_panel.html")
     except Exception as exc:
         logger.error(f"Failed to render attachment panel for {model_name}: {exc}")
         return ""

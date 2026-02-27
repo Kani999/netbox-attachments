@@ -1,6 +1,10 @@
+import logging
+
 from core.models.object_types import ObjectType
 from django import forms
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 from netbox.forms import (
     NetBoxModelBulkEditForm,
     NetBoxModelFilterSetForm,
@@ -56,8 +60,11 @@ class NetBoxAttachmentForm(NetBoxModelForm):
                     object_type=object_type,
                     object_id=int(pending_obj_id),
                 )
-            except (ObjectType.DoesNotExist, ValueError):
-                pass
+            except (ObjectType.DoesNotExist, ValueError) as e:
+                logger.warning(
+                    "Failed to create attachment assignment: object_type_id=%s object_id=%s: %s",
+                    pending_type_id, pending_obj_id, e,
+                )
 
         return obj
 
@@ -111,8 +118,10 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
                     )  # bake into widget attrs for template
                     self.fields["object"].disabled = False
                     self.fields["object"].label = _(model._meta.verbose_name.title())
-                except (ObjectType.DoesNotExist, Exception):
-                    pass
+                except ObjectType.DoesNotExist:
+                    pass  # Type not found; object picker stays disabled
+                except (AttributeError, TypeError):
+                    pass  # model_class() returned None or model has no manager
 
     def clean(self):
         super().clean()
@@ -159,7 +168,7 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
             api_url="/api/core/object-types/",
         ),
     )
-    has_assignments = forms.NullBooleanField(
+    has_assignments = forms.BooleanField(
         required=False,
         label=_("Has Assignments"),
         widget=forms.Select(
@@ -170,7 +179,7 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
             ]
         ),
     )
-    has_broken_assignments = forms.NullBooleanField(
+    has_broken_assignments = forms.BooleanField(
         required=False,
         label=_("Has Broken Assignments"),
         widget=forms.Select(

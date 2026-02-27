@@ -6,7 +6,7 @@ from django.conf import settings
 def _get_plugin_settings():
     try:
         plugins_config = getattr(settings, "PLUGINS_CONFIG", {})
-    except Exception:
+    except AttributeError:
         return {}
 
     if not isinstance(plugins_config, dict):

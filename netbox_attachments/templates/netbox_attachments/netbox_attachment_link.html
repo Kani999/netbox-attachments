@@ -3,7 +3,7 @@
 {% load form_helpers %}
 {% block form %}
     <div class="field-group mb-5">
-        {% if object.object_type and object.object_id %}
+        {% if 'object_type' not in form.fields %}
             {# Forward flow: object is pre-set, show read-only info #}
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label text-lg-end">Link To</label>
