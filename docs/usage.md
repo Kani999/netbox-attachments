@@ -63,7 +63,3 @@ Attachments are independent objects and can exist without any assignments.
 - To remove the file from disk, explicitly delete the attachment via its detail page (`/plugins/netbox-attachments/netbox-attachments/<id>/`) or via the API (`DELETE /api/plugins/netbox-attachments/netbox-attachments/<id>/`).
 - When a linked NetBox object (e.g. a Device) is deleted, its assignments are removed but the attachment is preserved.
 - Attachments with no assignments appear highlighted in red in the attachment list. Use the `?has_assignments=false` filter to surface them.
-
-## Example Script
-
-See [ignore/pynetbox_upload_example.py](../ignore/pynetbox_upload_example.py) for a local upload helper example.
