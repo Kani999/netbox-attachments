@@ -8,7 +8,7 @@ Lightweight backlog for future maintenance and improvement tasks.
 
 ### 1. Integer PK workaround in `pre_delete` signal
 
-**Location:** `models.py:158-161`
+**Location:** `models.py:159-162`
 
 ```python
 # Workaround: only run signals on Models where PK is Integral

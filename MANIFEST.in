@@ -1,4 +1,5 @@
 recursive-include netbox_attachments/templates *
+recursive-include docs *
 include LICENSE
 include README.md
 prune __pycache__
