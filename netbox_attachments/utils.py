@@ -53,7 +53,7 @@ def attachment_upload(instance, filename):
     if instance.name and instance.name != filename:
         # Rename the file to the provided name, if any. Attempt to preserve the file extension.
         extension = "".join(Path(filename).suffixes)
-        filename = "".join([instance.name, extension])
+        filename = "".join([Path(instance.name).name, extension])  # strip dir components
 
     return "{}{}".format(path, filename)
 
