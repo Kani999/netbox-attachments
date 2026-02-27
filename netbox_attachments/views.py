@@ -1,4 +1,3 @@
-from core.models.object_types import ObjectType
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -7,6 +6,7 @@ from netbox.views import generic
 from utilities.views import register_model_view
 
 from netbox_attachments import filtersets, forms, models, tables
+from netbox_attachments.utils import get_enabled_object_type_queryset
 
 
 @register_model_view(models.NetBoxAttachment, name="", detail=True)
@@ -102,8 +102,17 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
             # When only object_type is present the request is an HTMX re-render; leave
             # the instance untouched so the form can detect the selection via get_field_value.
             if object_type_id and object_id:
-                instance.object_type = get_object_or_404(ObjectType, pk=object_type_id)
-                instance.object_id = object_id
+                object_type = get_object_or_404(get_enabled_object_type_queryset(), pk=object_type_id)
+                model = object_type.model_class()
+                if model is None:
+                    return instance
+                try:
+                    target_pk = int(object_id)
+                except (TypeError, ValueError):
+                    return instance
+                get_object_or_404(model, pk=target_pk)
+                instance.object_type = object_type
+                instance.object_id = target_pk
         return instance
 
     def get_extra_addanother_params(self, request):
@@ -121,6 +130,16 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
     queryset = models.NetBoxAttachmentAssignment.objects.all()
     default_return_url = "plugins:netbox_attachments:netboxattachment_list"
 
+    def _get_safe_return_url(self, request):
+        candidate = request.GET.get("return_url")
+        if candidate and url_has_allowed_host_and_scheme(
+            candidate,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return candidate
+        return reverse("plugins:netbox_attachments:netboxattachment_list")
+
     def post(self, request, *args, **kwargs):
         assignment = get_object_or_404(
             models.NetBoxAttachmentAssignment.objects.restrict(request.user, "delete"),
@@ -136,10 +155,7 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
             f"Attachment '{attachment}' has been unlinked from this object.",
         )
 
-        return_url = request.GET.get("return_url")
-        if not return_url or not url_has_allowed_host_and_scheme(return_url, allowed_hosts={request.get_host()}):
-            return_url = reverse("plugins:netbox_attachments:netboxattachment_list")
-        return redirect(return_url)
+        return redirect(self._get_safe_return_url(request))
 
     def get(self, request, *args, **kwargs):
         assignment = get_object_or_404(
@@ -154,9 +170,6 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
             {
                 "object": assignment,
                 "attachment": attachment,
-                "return_url": request.GET.get(
-                    "return_url",
-                    reverse("plugins:netbox_attachments:netboxattachment_list"),
-                ),
+                "return_url": self._get_safe_return_url(request),
             },
         )
