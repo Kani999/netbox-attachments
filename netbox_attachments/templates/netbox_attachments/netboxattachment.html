@@ -1,6 +1,7 @@
 {% extends "generic/object.html" %}
 {% load render_table from django_tables2 %}
 {% load plugins %}
+{% load i18n %}
 {% block content %}
   <div class="row mb-3">
     <div class="col col-md-6">
@@ -50,12 +51,12 @@
     <div class="col col-md-12">
       <div class="card">
         <h5 class="card-header">
-          Assigned To
+          {% trans "Assigned To" %}
           <div class="card-actions">
             {% if perms.netbox_attachments.add_netboxattachmentassignment %}
               <a href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?attachment={{ object.pk }}&return_url={{ request.path|urlencode }}"
                  class="btn btn-ghost-primary btn-sm">
-                <i class="mdi mdi-link-variant" aria-hidden="true"></i> Assign to Object
+                <i class="mdi mdi-link-variant" aria-hidden="true"></i> {% trans "Assign to Object" %}
               </a>
             {% endif %}
           </div>
