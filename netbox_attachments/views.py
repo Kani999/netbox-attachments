@@ -51,9 +51,21 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
 
     def alter_object(self, instance, request, args, kwargs):
         if not instance.pk:
-            # Pass assignment context to the form's save() via instance attributes
-            instance._pending_object_type_id = request.GET.get("object_type")
-            instance._pending_object_id = request.GET.get("object_id")
+            object_type_id = request.GET.get("object_type") or None
+            object_id = request.GET.get("object_id") or None
+            if object_type_id and object_id:
+                object_type = get_object_or_404(get_enabled_object_type_queryset(), pk=object_type_id)
+                model = object_type.model_class()
+                if model is None:
+                    return instance
+                try:
+                    target_pk = int(object_id)
+                except (TypeError, ValueError):
+                    return instance
+                get_object_or_404(model, pk=target_pk)
+                # Pass validated assignment context to the form's save() via instance attributes
+                instance._pending_object_type_id = object_type.pk
+                instance._pending_object_id = target_pk
         return instance
 
     def get_extra_addanother_params(self, request):
@@ -131,7 +143,7 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
     default_return_url = "plugins:netbox_attachments:netboxattachment_list"
 
     def _get_safe_return_url(self, request):
-        candidate = request.GET.get("return_url")
+        candidate = request.POST.get("return_url") or request.GET.get("return_url")
         if candidate and url_has_allowed_host_and_scheme(
             candidate,
             allowed_hosts={request.get_host()},
