@@ -154,6 +154,9 @@ def pre_delete_receiver(sender, instance, **kwargs):
     # Skip if the sender is one of our own models (avoid recursion)
     if sender in (NetBoxAttachment, NetBoxAttachmentAssignment):
         return
+    # Skip high-frequency Django internal models
+    if sender._meta.app_label in ("sessions", "admin", "contenttypes", "auth"):
+        return
 
     try:
         object_type = ObjectType.objects.get_for_model(instance)
