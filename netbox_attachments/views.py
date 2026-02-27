@@ -142,7 +142,10 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
         return redirect(return_url)
 
     def get(self, request, *args, **kwargs):
-        assignment = get_object_or_404(models.NetBoxAttachmentAssignment, pk=kwargs["pk"])
+        assignment = get_object_or_404(
+            models.NetBoxAttachmentAssignment.objects.restrict(request.user, "delete"),
+            pk=kwargs["pk"],
+        )
         attachment = assignment.attachment
 
         return render(

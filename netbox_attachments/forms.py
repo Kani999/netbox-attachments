@@ -3,8 +3,6 @@ import logging
 from core.models.object_types import ObjectType
 from django import forms
 from django.utils.translation import gettext as _
-
-logger = logging.getLogger(__name__)
 from netbox.forms import (
     NetBoxModelBulkEditForm,
     NetBoxModelFilterSetForm,
@@ -22,6 +20,8 @@ from utilities.forms.widgets.apiselect import APISelect
 
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 from netbox_attachments.utils import get_enabled_object_type_queryset
+
+logger = logging.getLogger(__name__)
 
 
 class NetBoxAttachmentForm(NetBoxModelForm):
@@ -63,7 +63,9 @@ class NetBoxAttachmentForm(NetBoxModelForm):
             except (ObjectType.DoesNotExist, ValueError) as e:
                 logger.warning(
                     "Failed to create attachment assignment: object_type_id=%s object_id=%s: %s",
-                    pending_type_id, pending_obj_id, e,
+                    pending_type_id,
+                    pending_obj_id,
+                    e,
                 )
 
         return obj
