@@ -71,10 +71,10 @@ class NetBoxAttachment(NetBoxModel):
         """
         Saves the attachment after updating file attributes.
         """
-        self.size = self.file.size
-
         if not self.file:
             return super().save(*args, **kwargs)
+
+        self.size = self.file.size
 
         if not self.name:
             if self._state.adding:
