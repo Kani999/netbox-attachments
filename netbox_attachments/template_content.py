@@ -174,11 +174,11 @@ def get_template_extensions() -> List[Type]:
 
     try:
         plugin_settings = _get_plugin_settings()
-        should_add_button = plugin_settings.get("create_add_button", False)
+        should_add_button = plugin_settings.get("create_add_button", True)
 
         if not isinstance(should_add_button, bool):
-            logger.warning("Invalid create_add_button value, defaulting to False")
-            should_add_button = False
+            logger.warning("Invalid create_add_button value, defaulting to True")
+            should_add_button = True
 
         all_models = list(apps.get_models())
         logger.debug(f"Found {len(all_models)} standard Django models")
