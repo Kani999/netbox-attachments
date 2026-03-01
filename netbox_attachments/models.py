@@ -74,7 +74,10 @@ class NetBoxAttachment(NetBoxModel):
         if not self.file:
             return super().save(*args, **kwargs)
 
-        self.size = self.file.size
+        try:
+            self.size = self.file.size
+        except OSError:
+            self.size = None
 
         if not self.name:
             if self._state.adding:
@@ -166,9 +169,7 @@ def pre_delete_receiver(sender, instance, **kwargs):
     try:
         # Delete the assignments for this object; attachments are left intact
         # (QuerySet.delete() is a no-op on an empty queryset — no need for .exists() guard)
-        NetBoxAttachmentAssignment.objects.filter(
-            object_type_id=object_type.id, object_id=instance.pk
-        ).delete()
+        NetBoxAttachmentAssignment.objects.filter(object_type_id=object_type.id, object_id=instance.pk).delete()
     except (TypeError, ValueError):
         # instance.pk is not an integer type — no assignments can exist for it
         return
