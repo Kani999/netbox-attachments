@@ -9,3 +9,7 @@ build/
 /pynetbox_test.py
 CLAUDE.md
 ignore/
+.claude/session-log.md
+.claude/session-start.tmp
+.claude/hooks/
+.claude/agents/
