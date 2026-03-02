@@ -55,7 +55,7 @@ def attachment_upload(instance, filename):
         extension = "".join(Path(filename).suffixes)
         filename = "".join([Path(instance.name).name, extension])  # strip dir components
 
-    return "{}{}".format(path, filename)
+    return "{}{}".format(path, Path(filename).name)
 
 
 def is_custom_object_model(model):

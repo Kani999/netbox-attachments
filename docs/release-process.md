@@ -12,10 +12,10 @@ This project follows Semantic Versioning and Keep a Changelog.
 
 1. Ensure CI is green (`ci.yml`).
 2. Update [CHANGELOG.md](../CHANGELOG.md) for the new version.
-2.5. Update version in `netbox_attachments/version.py`.
-3. Create a Git tag matching the version in `netbox_attachments/version.py`.
-4. Publish GitHub release notes from changelog entries.
-5. Let the publish workflow upload distributions to TestPyPI/PyPI.
+3. Update version in `netbox_attachments/version.py`.
+4. Create a Git tag matching the version in `netbox_attachments/version.py`.
+5. Publish GitHub release notes from changelog entries.
+6. Let the publish workflow upload distributions to TestPyPI/PyPI.
 
 ## Artifact Validation
 

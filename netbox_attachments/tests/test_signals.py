@@ -23,7 +23,7 @@ def _make_handler(ObjectType, NetBoxAttachmentAssignment, own_models):
     without requiring a live Django/NetBox environment.
     """
 
-    def pre_delete_receiver(sender, instance, **kwargs):
+    def pre_delete_receiver(sender, instance, **kwargs):  # noqa: ARG001
         if sender in own_models:
             return
         try:
