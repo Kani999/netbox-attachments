@@ -39,6 +39,31 @@ A future improvement would let users assign one attachment to **multiple objects
 
 Starting scope: same object type only (avoids mixed-type API complexity).
 
+### 7. Add tags to assignments
+
+`NetBoxAttachmentAssignment` already inherits a `tags` M2M field from `NetBoxModel` (no migration needed).
+Wire it up when ready:
+
+- `tables.py` — add `tags = columns.TagColumn(url_name="plugins:netbox_attachments:netboxattachmentassignment_list")` to `NetBoxAttachmentAssignmentTable` and include `"tags"` in `fields`/`default_columns`
+- `forms.py` — add `"tags"` to `NetBoxAttachmentLinkForm.Meta.fields` and add `tag = TagFilterField(model)` to `NetBoxAttachmentAssignmentFilterForm`
+- `filtersets.py` — add `tag = TagFilter()` to `NetBoxAttachmentAssignmentFilterSet`
+- `templates/netbox_attachments/netbox_attachment_link.html` — add `{% render_field form.tags %}` in the forward-flow branch (after `form.attachment`)
+- `tests/test_new_features.py` — restore the `test_assignment_filter_form_declares_tag_filter_field` test
+
+### 8. Bulk-unlink on the object attachment tab
+
+The per-row unlink button handles one assignment at a time. A bulk-unlink action on the
+object detail attachment tab would let users select multiple rows and remove all chosen
+assignments in a single operation — useful when an attachment has been linked to many
+objects and needs cleaning up.
+
+Implementation notes:
+- Enable checkboxes by removing the `actions = ()` override (or adding a bulk-delete URL)
+  in `AttachmentTabView` inside `template_content.py`.
+- Register a bulk-delete URL for `NetBoxAttachmentAssignment` scoped to the parent object
+  so the return URL stays on the correct tab.
+- Guard with `netbox_attachments.delete_netboxattachmentassignment` permission.
+
 ### 4. Plugin certification remediation status (NetBox 4.5.x)
 
 External maintainer actions remaining:

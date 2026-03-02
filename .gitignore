@@ -13,3 +13,4 @@ CLAUDE.md
 .claude/session-start.tmp
 .claude/hooks/
 .claude/agents/
+.claude/

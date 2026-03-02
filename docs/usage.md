@@ -2,11 +2,32 @@
 
 ## UI Workflow
 
-1. Open a supported NetBox object detail page.
-2. Use the plugin UI to add a new attachment or link an existing one.
-3. Manage assignments from the attachment and object detail views.
+### Object detail attachment tab
 
-Display location depends on `display_default`/`display_setting`.
+Open a supported NetBox object detail page. The attachment tab shows a table of all assignments for that object, rendered using `NetBoxAttachmentForObjectTable` with the following columns: Attachment (link), Description, File, Size, Links, and Actions (download and Unlink).
+
+The **Links** column shows the total number of objects this attachment is assigned to across the whole system, as a clickable number linking to the attachment detail page. A count of 1 means unlinking will leave the attachment with no assignments; a count greater than 1 means the attachment remains linked elsewhere.
+
+Each row includes an Unlink button to remove that assignment without deleting the underlying file. Below the table, two buttons are available: "Add Attachment" (upload and assign a new file) and "Link Existing" (assign an already-uploaded attachment).
+
+Display location of the tab depends on the `display_default` and `display_setting` configuration options.
+
+### Global assignment list
+
+A global list of all assignments is available at `/plugins/netbox-attachments/netbox-attachment-assignments/`. Access it from the sidebar via Attachments → Assignments.
+
+The list supports the following search and filter options:
+
+| Filter      | Description                                      |
+|-------------|--------------------------------------------------|
+| `q`         | Free-text search across assignment fields.       |
+| Attachment  | Filter by a specific attachment record.          |
+| Object Type | Filter by the content type of the linked object. |
+| Tag         | Filter by tags applied to the assignment.        |
+
+### Unlink confirmation
+
+When unlinking an assignment, the confirmation page identifies the target object as `app_label > model #id` (e.g., `dcim > circuit #224`). For broken assignments — where the linked object type can no longer be resolved — the same format is used, derived from the raw content type, so the confirmation is unambiguous even when the object no longer exists.
 
 ## API Workflow
 

@@ -9,6 +9,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Added
 
+- Global assignment list view at `/plugins/netbox-attachments/netbox-attachment-assignments/` with search (`q`) and filter by attachment, object type, and tag (issue #2).
+- Object detail attachment tab now renders assignments via `NetBoxAttachmentForObjectTable` with columns: Attachment, Description, File, Size, Tags, and Actions (download + Unlink per row) (issue #4).
+- Tags on `NetBoxAttachmentAssignment`: exposed in the global assignment list table, the link form, and the filter form.
+- "Assignments" entry added to the plugin sidebar menu under Attachments.
 - `NetBoxAttachmentAssignment` junction model: one attachment can now be linked to multiple objects simultaneously.
 - New "Assign" / "Unlink" UI workflow: link form with HTMX-driven object picker (`NetBoxAttachmentLinkView`) and unlink confirmation page (`NetBoxAttachmentAssignmentDeleteView`).
 - New API endpoint `/api/plugins/netbox-attachments/netbox-attachment-assignments/` with full CRUD support.
@@ -37,6 +41,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
+- Unlink confirmation for broken/stale assignments now displays `app_label > model #id` (e.g., `dcim > circuit #224`) instead of the ContentType verbose name (issue #3).
 - Redirect to a deleted attachment URL after unlinking the last assignment (404 error).
 - Filter form boolean fields use `BooleanField` with an explicit `Select` widget instead of `NullBooleanField`.
 - Exception handlers narrowed from bare `except` clauses to specific exception types.
