@@ -84,7 +84,7 @@ class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
 
 @register_model_view(models.NetBoxAttachment, "bulk_edit", path="edit", detail=False)
 class NetBoxAttachmentBulkEditView(generic.BulkEditView):
-    queryset = models.NetBoxAttachment.objects.all()
+    queryset = models.NetBoxAttachment.objects.prefetch_related("attachment_assignments")
     filterset = filtersets.NetBoxAttachmentFilterSet
     table = tables.NetBoxAttachmentTable
     form = forms.NetBoxAttachmentBulkEditForm
@@ -92,7 +92,7 @@ class NetBoxAttachmentBulkEditView(generic.BulkEditView):
 
 @register_model_view(models.NetBoxAttachment, "bulk_delete", path="delete", detail=False)
 class NetBoxAttachmentBulkDeleteView(generic.BulkDeleteView):
-    queryset = models.NetBoxAttachment.objects.all()
+    queryset = models.NetBoxAttachment.objects.prefetch_related("attachment_assignments")
     filterset = filtersets.NetBoxAttachmentFilterSet
     table = tables.NetBoxAttachmentTable
     default_return_url = "plugins:netbox_attachments:netboxattachment_list"
