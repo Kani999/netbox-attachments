@@ -19,8 +19,8 @@
                             Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ parent_name }}</strong>?
                         {% endblocktrans %}
                         {% else %}
-                            {% blocktrans with attachment_name=attachment obj_type=object.object_type obj_id=object.object_id %}
-                            Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ obj_type }} #{{ obj_id }}</strong>?
+                            {% blocktrans with attachment_name=attachment app_label=object.object_type.app_label model=object.object_type.model obj_id=object.object_id %}
+                            Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ app_label }} &gt; {{ model }} #{{ obj_id }}</strong>?
                         {% endblocktrans %}
                         {% endif %}
                     </p>
