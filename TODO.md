@@ -64,6 +64,67 @@ Implementation notes:
   so the return URL stays on the correct tab.
 - Guard with `netbox_attachments.delete_netboxattachmentassignment` permission.
 
+### 10. Panel display modes missing unlink button; "Link Existing" shown instead
+
+When `display_default` (or a per-model override) is set to `left_page`, `right_page`, or
+`full_width_page`, the attachment panel renders via `netbox_attachment_panel.html`, which calls:
+
+```django
+{% htmx_table 'plugins:netbox_attachments:netboxattachment_list' object_type_id=... object_id=... %}
+```
+
+This URL points to `NetBoxAttachmentListView`, which queries `NetBoxAttachment` objects and uses
+`NetBoxAttachmentTable` — a table that has no unlink button, but does show a "Link Existing"
+button in the card header and an "Assign" button per row (neither of which is useful when you
+are already looking at the object's own attachments).
+
+The `additional_tab` mode works correctly because `AttachmentTabView` queries
+`NetBoxAttachmentAssignment` objects and uses `NetBoxAttachmentForObjectTable`, which renders
+both a **Download** and an **Unlink** button per row via `OBJECT_ATTACHMENT_ACTIONS`.
+
+**Fix plan:**
+
+1. Add `NetBoxAttachmentPanelListView` in `views.py` — a `generic.ObjectListView` subclass that:
+   - queries `NetBoxAttachmentAssignment` with `select_related("attachment")` and
+     `prefetch_related("attachment__tags", "attachment__attachment_assignments")`
+   - uses `tables.NetBoxAttachmentForObjectTable`
+   - uses `filtersets.NetBoxAttachmentAssignmentFilterSet`
+   - sets `actions = {}` (no bulk actions needed in this context)
+
+2. Register a URL in `urls.py`:
+   ```python
+   path("netbox-attachment-panel/", views.NetBoxAttachmentPanelListView.as_view(),
+        name="netboxattachment_panel_list")
+   ```
+
+3. Update `netbox_attachment_panel.html` line 24 to use the new URL:
+   ```django
+   {% htmx_table 'plugins:netbox_attachments:netboxattachment_panel_list' object_type_id=object|content_type_id object_id=object.pk %}
+   ```
+
+4. Remove the "Link Existing" button from the card header actions in `netbox_attachment_panel.html`
+   (it is not meaningful when browsing an object's own attachment list; linking is done from the
+   attachment detail or global list). Keep the "Add Attachment" button.
+
+No migration needed. No change to `NetBoxAttachmentForObjectTable`.
+
+### 9. HTMX selector error for Custom Objects and object types without list/filter view
+
+When linking an attachment to a **Custom Object** (or any `object_type` that has no standard
+list/filter view registered in NetBox), clicking the object selector widget raises an HTMX error.
+
+Root cause: the selector widget constructs a URL to a NetBox list/filter view for the selected
+`content_type` — Custom Objects and some plugin-registered types either have no such URL or
+their URL pattern is not discoverable via the standard `<app_label>:<model>_list` convention.
+
+What needs fixing:
+- Detect (before or during widget rendering) whether the selected `object_type` has a resolvable
+  list/filter URL.
+- Gracefully degrade: show a disabled selector or a plain text input when no URL can be resolved,
+  rather than letting HTMX fire a broken request.
+- Applies to both the **assignment link form** selector and any other place the object picker
+  widget is used.
+
 ### 4. Plugin certification remediation status (NetBox 4.5.x)
 
 External maintainer actions remaining:
