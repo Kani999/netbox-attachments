@@ -125,6 +125,10 @@ class NetBoxAttachmentAssignment(NetBoxModel):
         ]
 
     def __str__(self):
+        return f"Assignment #{self.pk}"
+
+    def get_display(self):
+        """Rich display — only call when parent is prefetched or single-object context."""
         parent = self.parent
         if parent:
             return f"{self.attachment} → {parent}"
@@ -158,7 +162,7 @@ def pre_delete_receiver(sender, instance, **kwargs):
     if sender in (NetBoxAttachment, NetBoxAttachmentAssignment):
         return
     # Skip high-frequency Django internal models
-    if sender._meta.app_label in ("sessions", "admin", "contenttypes", "auth"):
+    if sender._meta.app_label in ("sessions", "admin", "contenttypes", "auth", "taggit", "users"):
         return
 
     try:
