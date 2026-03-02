@@ -40,3 +40,4 @@ Restart NetBox application services so plugin hooks and template extensions are 
 
 - Open NetBox UI and confirm plugin menu entries are available.
 - Verify API endpoint `/api/plugins/netbox-attachments/netbox-attachments/` responds.
+- Verify API endpoint `/api/plugins/netbox-attachments/netbox-attachment-assignments/` responds.

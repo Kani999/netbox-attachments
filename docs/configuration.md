@@ -37,7 +37,15 @@ Scope targets where attachments are allowed.
 - Default: `"additional_tab"`
 - Allowed: `"left_page"`, `"right_page"`, `"full_width_page"`, `"additional_tab"`
 
-Default display location for attachment UI.
+Default display location for attachment UI. Each value controls where the panel is rendered on the object detail page:
+
+- `additional_tab` — adds a dedicated "Attachments" tab to the object detail page.
+- `left_page` — injects the panel into the left column of the object detail page.
+- `right_page` — injects the panel into the right column of the object detail page.
+- `full_width_page` — injects the panel as a full-width section below the main content.
+
+!!! warning
+    Unrecognized values for `display_default` will silently produce a non-functional panel extension. Use only the four values listed above.
 
 ### `create_add_button`
 
@@ -45,6 +53,9 @@ Default display location for attachment UI.
 - Default: `True`
 
 Controls top-level **Attachments** dropdown creation when using `additional_tab` rendering mode.
+
+!!! note
+    Non-boolean values (e.g. `1`, `"true"`) log a warning and fall back to `True`.
 
 ### `display_setting`
 

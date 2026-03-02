@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Handle `OSError` when reading file size on save — `size` field now stores `null` instead of raising; this is reflected in the API response.
+- Defer `CustomObjectType` DB lookup in `validate_object_type` to avoid startup `RuntimeWarning`.
+- Suppress exception chaining in serializer `validate()` for cleaner error tracebacks.
+
 ## [11.0.0] - 2026-02-26
 
 ### Added
