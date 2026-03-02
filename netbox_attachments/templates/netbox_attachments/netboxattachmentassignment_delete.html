@@ -1,40 +1,42 @@
 {% extends "generic/object_delete.html" %}
 {% load helpers %}
 {% load i18n %}
-{% block title %}{% trans "Unlink Attachment" %}{% endblock %}
+{% block title %}
+    {% trans "Unlink Attachment" %}
+{% endblock %}
 {% block content %}
-<div class="row">
-    <div class="col col-md-6 offset-md-3">
-        <div class="card">
-            <h5 class="card-header text-danger">
-                <i class="mdi mdi-alert" aria-hidden="true"></i>
-                {% trans "Confirm Unlink" %}
-            </h5>
-            <div class="card-body">
-                <p>
-                    {% if object.parent %}
-                        {% blocktrans with attachment_name=attachment parent_name=object.parent %}
+    <div class="row">
+        <div class="col col-md-6 offset-md-3">
+            <div class="card">
+                <h5 class="card-header text-danger">
+                    <i class="mdi mdi-alert" aria-hidden="true"></i>
+                    {% trans "Confirm Unlink" %}
+                </h5>
+                <div class="card-body">
+                    <p>
+                        {% if object.parent %}
+                            {% blocktrans with attachment_name=attachment parent_name=object.parent %}
                             Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ parent_name }}</strong>?
                         {% endblocktrans %}
-                    {% else %}
-                        {% blocktrans with attachment_name=attachment obj_type=object.object_type obj_id=object.object_id %}
+                        {% else %}
+                            {% blocktrans with attachment_name=attachment obj_type=object.object_type obj_id=object.object_id %}
                             Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ obj_type }} #{{ obj_id }}</strong>?
                         {% endblocktrans %}
-                    {% endif %}
-                </p>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="return_url" value="{{ return_url }}">
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ return_url }}" class="btn btn-secondary">{% trans "Cancel" %}</a>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="mdi mdi-link-off" aria-hidden="true"></i>
-                            {% trans "Unlink" %}
-                        </button>
-                    </div>
-                </form>
+                        {% endif %}
+                    </p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="return_url" value="{{ return_url }}">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ return_url }}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="mdi mdi-link-off" aria-hidden="true"></i>
+                                {% trans "Unlink" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock content %}

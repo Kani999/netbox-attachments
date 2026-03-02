@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 # Inline replica of pre_delete_receiver — keeps tests runnable without Django
 # ---------------------------------------------------------------------------
 
+
 class _FakeDoesNotExist(Exception):
     pass
 
@@ -31,9 +32,7 @@ def _make_handler(ObjectType, NetBoxAttachmentAssignment, own_models):
         except ObjectType.DoesNotExist:
             return
         try:
-            NetBoxAttachmentAssignment.objects.filter(
-                object_type_id=object_type.id, object_id=instance.pk
-            ).delete()
+            NetBoxAttachmentAssignment.objects.filter(object_type_id=object_type.id, object_id=instance.pk).delete()
         except (TypeError, ValueError):
             return
 
@@ -47,6 +46,7 @@ def make_fake_instance(pk=1):
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_pre_delete_receiver_handles_unregistered_model_gracefully():
     """

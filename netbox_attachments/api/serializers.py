@@ -13,9 +13,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="plugins-api:netbox_attachments-api:netboxattachmentassignment-detail"
     )
-    attachment = serializers.PrimaryKeyRelatedField(
-        queryset=NetBoxAttachment.objects.all()
-    )
+    attachment = serializers.PrimaryKeyRelatedField(queryset=NetBoxAttachment.objects.all())
     object_type = ContentTypeField(queryset=ObjectType.objects.all())
     parent = serializers.SerializerMethodField(read_only=True)
 
@@ -38,9 +36,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and hasattr(request, "user"):
-            self.fields["attachment"].queryset = NetBoxAttachment.objects.restrict(
-                request.user, "view"
-            )
+            self.fields["attachment"].queryset = NetBoxAttachment.objects.restrict(request.user, "view")
 
     def validate(self, data):
         # Validate that the parent object exists.
@@ -52,9 +48,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
             # C1: Enforce plugin scope_filter / applied_scope on the target model
             model_class = object_type.model_class()
             if model_class is None or not validate_object_type(model_class):
-                raise serializers.ValidationError(
-                    {"object_type": "This object type is not permitted for attachments."}
-                )
+                raise serializers.ValidationError({"object_type": "This object type is not permitted for attachments."})
             try:
                 object_type.get_object_for_this_type(id=object_id)
             except ObjectDoesNotExist:

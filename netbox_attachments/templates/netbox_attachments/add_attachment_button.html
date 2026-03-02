@@ -6,7 +6,10 @@
     {% endif %}
     {% firstof attachment_return_url request.path as return_path %}
     <div class="btn-group" role="group">
-        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn btn-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
             <i class="mdi mdi-paperclip" aria-hidden="true"></i>
             {% trans "Attachments" %}
         </button>

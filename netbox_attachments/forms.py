@@ -21,6 +21,7 @@ from utilities.views import get_action_url
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 from netbox_attachments.utils import get_enabled_object_type_queryset
 
+
 class NetBoxAttachmentForm(NetBoxModelForm):
     comments = CommentField(label="Comment")
 
