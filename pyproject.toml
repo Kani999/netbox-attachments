@@ -25,7 +25,6 @@ classifiers = [
 ]
 dependencies = [
     "django>=5.0,<6.0",
-    "netbox>=4.5,<4.6",
 ]
 
 [project.optional-dependencies]

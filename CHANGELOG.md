@@ -47,7 +47,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Bulk-view `prefetch_related` now traverses `attachment_assignments__object_type` to avoid N+1 queries on the "Assigned To" column.
 - `__init__.py`: narrow `except ImportError` to `except ModuleNotFoundError` for the `PluginConfig` fallback.
 - `utils.py`: `_get_plugin_settings()` now also catches `ImproperlyConfigured` so the helper is safe to call before Django is fully configured.
-- `pyproject.toml`: populate `dependencies` with `django>=5.0,<6.0` and `netbox>=4.5,<4.6`.
+- `pyproject.toml`: populate `dependencies` with `django>=5.0,<6.0`; NetBox compatibility enforced at runtime via `min_version`/`max_version` in `PluginConfig` (the `netbox` PyPI package is a placeholder and cannot be used as a pip dependency).
 
 ## [10.0.0] - 2025-11-11
 
