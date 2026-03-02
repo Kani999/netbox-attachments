@@ -63,6 +63,45 @@ UNLINK_BUTTON = """
 </a>
 """
 
+ASSIGNMENT_ATTACHMENT_LINK = """
+<a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=record.attachment.pk %}">
+    {{ record.attachment }}
+</a>
+"""
+
+OBJECT_ATTACHMENT_NAME_LINK = """
+<a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment }}</a>
+"""
+
+OBJECT_ATTACHMENT_SIZE = "{{ record.attachment.size|filesizeformat }}"
+
+OBJECT_ATTACHMENT_TAGS = """
+{% load helpers %}
+{% for tag in record.attachment.tags.all %}
+    <a href="{% url 'plugins:netbox_attachments:netboxattachment_list' %}?tag={{ tag.slug }}"
+       class="badge" style="color: #ffffff; background-color: #{{ tag.color }}">{{ tag }}</a>
+{% empty %}
+    <span class="text-muted">&mdash;</span>
+{% endfor %}
+"""
+
+OBJECT_ATTACHMENT_LINKS_COUNT = """
+<a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment.attachment_assignments.all|length }}</a>
+"""
+
+OBJECT_ATTACHMENT_ACTIONS = """
+<a href="{{ record.attachment.file.url }}" target="_blank" rel="noopener noreferrer"
+   class="btn btn-sm btn-primary" title="Download">
+    <i class="mdi mdi-download"></i>
+</a>
+{% if perms.netbox_attachments.delete_netboxattachmentassignment %}
+<a href="{% url 'plugins:netbox_attachments:netboxattachmentassignment_delete' pk=record.pk %}?return_url={{ request.path|urlencode }}"
+   class="btn btn-sm btn-danger" title="Unlink">
+    <i class="mdi mdi-link-off"></i>
+</a>
+{% endif %}
+"""
+
 
 def get_missing_parent_row_class(record):
     assignments = record.attachment_assignments.all()
@@ -112,6 +151,11 @@ class NetBoxAttachmentTable(NetBoxTable):
 
 
 class NetBoxAttachmentAssignmentTable(NetBoxTable):
+    attachment = tables.TemplateColumn(
+        template_code=ASSIGNMENT_ATTACHMENT_LINK,
+        verbose_name="Attachment",
+        orderable=False,
+    )
     object_type = columns.ContentTypeColumn(verbose_name="Object Type")
     parent = tables.TemplateColumn(
         template_code=ASSIGNMENT_PARENT_COLUMN,
@@ -124,14 +168,57 @@ class NetBoxAttachmentAssignmentTable(NetBoxTable):
         model = NetBoxAttachmentAssignment
         fields = (
             "pk",
+            "attachment",
             "object_type",
             "parent",
             "created",
             "actions",
         )
         default_columns = (
+            "attachment",
             "object_type",
             "parent",
             "created",
             "actions",
         )
+
+
+class NetBoxAttachmentForObjectTable(NetBoxTable):
+    """Table for displaying assignments on an object's attachment tab, with per-row unlink."""
+
+    attachment_name = tables.TemplateColumn(
+        template_code=OBJECT_ATTACHMENT_NAME_LINK,
+        verbose_name="Attachment",
+        orderable=False,
+    )
+    description = tables.Column(
+        accessor="attachment.description",
+        verbose_name="Description",
+        orderable=False,
+    )
+    file = tables.FileColumn(
+        accessor="attachment.file",
+        verbose_name="File",
+        orderable=False,
+    )
+    size = tables.TemplateColumn(
+        template_code=OBJECT_ATTACHMENT_SIZE,
+        verbose_name="Size",
+        orderable=False,
+    )
+    links = tables.TemplateColumn(
+        template_code=OBJECT_ATTACHMENT_LINKS_COUNT,
+        verbose_name="Links",
+        orderable=False,
+    )
+    tags = tables.TemplateColumn(
+        template_code=OBJECT_ATTACHMENT_TAGS,
+        verbose_name="Tags",
+        orderable=False,
+    )
+    actions = columns.ActionsColumn(actions=(), extra_buttons=OBJECT_ATTACHMENT_ACTIONS)
+
+    class Meta(NetBoxTable.Meta):
+        model = NetBoxAttachmentAssignment
+        fields = ("pk", "id", "attachment_name", "description", "file", "size", "links", "tags", "actions")
+        default_columns = ("attachment_name", "description", "file", "size", "links", "actions")

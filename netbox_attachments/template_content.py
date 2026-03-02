@@ -72,7 +72,7 @@ def register_attachment_tab_view(model) -> str:
     from utilities.views import ViewTab, register_model_view
 
     from netbox_attachments import filtersets, tables
-    from netbox_attachments.models import NetBoxAttachment
+    from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 
     model_name = model._meta.model_name
     view_name = f"{model_name}-attachment_list"
@@ -80,10 +80,11 @@ def register_attachment_tab_view(model) -> str:
 
     class AttachmentTabView(generic.ObjectChildrenView):
         queryset = model.objects.all()
-        child_model = NetBoxAttachment
-        table = tables.NetBoxAttachmentTable
-        filterset = filtersets.NetBoxAttachmentFilterSet
+        child_model = NetBoxAttachmentAssignment
+        table = tables.NetBoxAttachmentForObjectTable
+        filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
         template_name = "netbox_attachments/generic_tab_list.html"
+        actions = ()  # per-row unlink button handles deletion; no bulk URLs registered
 
         tab = ViewTab(
             label="Attachments",
@@ -102,12 +103,13 @@ def register_attachment_tab_view(model) -> str:
 
         def get_children(self, request, parent):
             return (
-                NetBoxAttachment.objects.filter(
-                    attachment_assignments__object_type=ObjectType.objects.get_for_model(parent),
-                    attachment_assignments__object_id=parent.id,
+                NetBoxAttachmentAssignment.objects.filter(
+                    object_type=ObjectType.objects.get_for_model(parent),
+                    object_id=parent.id,
                 )
                 .restrict(request.user, "view")
-                .distinct()
+                .select_related("attachment")
+                .prefetch_related("attachment__tags", "attachment__attachment_assignments")
             )
 
     register_model_view(model, name=view_name, path=view_path)(AttachmentTabView)
