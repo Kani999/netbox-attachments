@@ -41,6 +41,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
+- Panel display modes (`left_page`, `right_page`, `full_width_page`) now render per-row Download and Unlink buttons, matching `additional_tab` behaviour. Previously the panel used `netboxattachment_list` / `NetBoxAttachmentTable`, which omitted the Unlink button and showed a spurious "Link Existing" button in each row. A dedicated `NetBoxAttachmentPanelListView` (backed by `NetBoxAttachmentForObjectTable`, filtered by `object_type_id`/`object_id`) is now registered at `/netbox-attachment-panel/` and used by `netbox_attachment_panel.html`.
 - Unlink confirmation for broken/stale assignments now displays `app_label > model #id` (e.g., `dcim > circuit #224`) instead of the ContentType verbose name (issue #3).
 - Redirect to a deleted attachment URL after unlinking the last assignment (404 error).
 - Filter form boolean fields use `BooleanField` with an explicit `Select` widget instead of `NullBooleanField`.

@@ -12,6 +12,12 @@ Each row includes an Unlink button to remove that assignment without deleting th
 
 Display location of the tab depends on the `display_default` and `display_setting` configuration options.
 
+### Panel display modes (left_page, right_page, full_width_page)
+
+When the display mode is `left_page`, `right_page`, or `full_width_page`, the attachment UI is injected as an inline panel on the object detail page. The panel renders the same `NetBoxAttachmentForObjectTable` as the tab view: each row includes a Download button and an Unlink button scoped to that object's assignments.
+
+The panel header contains "Add Attachment" and "Link Existing" buttons identical to those in the tab view. The table is loaded via HTMX from the dedicated `netboxattachment_panel_list` endpoint (`/plugins/netbox-attachments/netbox-attachment-panel/`), which filters assignments by `object_type_id` and `object_id`.
+
 ### Global assignment list
 
 A global list of all assignments is available at `/plugins/netbox-attachments/netbox-attachment-assignments/`. Access it from the sidebar via Attachments → Assignments.
