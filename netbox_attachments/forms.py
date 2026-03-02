@@ -1,6 +1,6 @@
 from core.models.object_types import ObjectType
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from netbox.forms import (
     NetBoxModelBulkEditForm,
     NetBoxModelFilterSetForm,
