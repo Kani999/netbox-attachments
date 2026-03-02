@@ -1,6 +1,6 @@
 try:
     from netbox.plugins import PluginConfig
-except ImportError:
+except ModuleNotFoundError:
 
     class PluginConfig:  # type: ignore[no-redef]
         pass

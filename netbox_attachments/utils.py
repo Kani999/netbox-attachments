@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 
 def _get_plugin_settings():
     try:
         plugins_config = getattr(settings, "PLUGINS_CONFIG", {})
-    except AttributeError:
+    except (AttributeError, ImproperlyConfigured):
         return {}
 
     if not isinstance(plugins_config, dict):

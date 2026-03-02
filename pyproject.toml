@@ -23,7 +23,10 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = [
+    "django>=5.0,<6.0",
+    "netbox>=4.5,<4.6",
+]
 
 [project.optional-dependencies]
 test = ["django>=5.0", "pytest"]

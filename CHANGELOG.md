@@ -5,15 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Fixed
-
-- Handle `OSError` when reading file size on save — `size` field now stores `null` instead of raising; this is reflected in the API response.
-- Defer `CustomObjectType` DB lookup in `validate_object_type` to avoid startup `RuntimeWarning`.
-- Suppress exception chaining in serializer `validate()` for cleaner error tracebacks.
-
-## [11.0.0] - 2026-02-26
+## [11.0.0] - 2026-03-02
 
 ### Added
 
@@ -49,6 +41,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Filter form boolean fields use `BooleanField` with an explicit `Select` widget instead of `NullBooleanField`.
 - Exception handlers narrowed from bare `except` clauses to specific exception types.
 - `template_content.py` render functions guard against missing request context before rendering.
+- Handle `OSError` when reading file size on save — `size` field now stores `null` instead of raising; this is reflected in the API response.
+- Defer `CustomObjectType` DB lookup in `validate_object_type` to avoid startup `RuntimeWarning`.
+- Suppress exception chaining in serializer `validate()` for cleaner error tracebacks.
+- Bulk-view `prefetch_related` now traverses `attachment_assignments__object_type` to avoid N+1 queries on the "Assigned To" column.
+- `__init__.py`: narrow `except ImportError` to `except ModuleNotFoundError` for the `PluginConfig` fallback.
+- `utils.py`: `_get_plugin_settings()` now also catches `ImproperlyConfigured` so the helper is safe to call before Django is fully configured.
+- `pyproject.toml`: populate `dependencies` with `django>=5.0,<6.0` and `netbox>=4.5,<4.6`.
 
 ## [10.0.0] - 2025-11-11
 
