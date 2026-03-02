@@ -4,6 +4,7 @@
     {% if object_type_attachment_list %}
         {% url object_type_attachment_list pk=object.pk as attachment_return_url %}
     {% endif %}
+    {% firstof attachment_return_url request.path as return_path %}
     <div class="btn-group" role="group">
         <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="mdi mdi-paperclip" aria-hidden="true"></i>
@@ -13,7 +14,7 @@
             {% if perms.netbox_attachments.add_netboxattachment %}
                 <li>
                     <a class="dropdown-item"
-                       href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% firstof attachment_return_url request.path %}">
+                       href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ return_path|urlencode }}">
                         <i class="mdi mdi-plus-thick" aria-hidden="true"></i>
                         {% trans "Add Attachment" %}
                     </a>
@@ -22,7 +23,7 @@
             {% if perms.netbox_attachments.add_netboxattachmentassignment %}
                 <li>
                     <a class="dropdown-item"
-                       href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={% firstof attachment_return_url request.path %}">
+                       href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ return_path|urlencode }}">
                         <i class="mdi mdi-link-variant" aria-hidden="true"></i>
                         {% trans "Link Existing" %}
                     </a>
