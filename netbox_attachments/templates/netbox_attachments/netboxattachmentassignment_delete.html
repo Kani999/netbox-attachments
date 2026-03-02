@@ -12,16 +12,15 @@
             </h5>
             <div class="card-body">
                 <p>
-                    {% trans "Are you sure you want to unlink" %}
-                    <strong>{{ attachment }}</strong>
-                    {% trans "from" %}
-                    <strong>
-                        {% if object.parent %}
-                            {{ object.parent }}
-                        {% else %}
-                            {{ object.object_type }} #{{ object.object_id }}
-                        {% endif %}
-                    </strong>?
+                    {% if object.parent %}
+                        {% blocktrans with attachment_name=attachment parent_name=object.parent %}
+                            Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ parent_name }}</strong>?
+                        {% endblocktrans %}
+                    {% else %}
+                        {% blocktrans with attachment_name=attachment obj_type=object.object_type obj_id=object.object_id %}
+                            Are you sure you want to unlink <strong>{{ attachment_name }}</strong> from <strong>{{ obj_type }} #{{ obj_id }}</strong>?
+                        {% endblocktrans %}
+                    {% endif %}
                 </p>
                 <form method="post">
                     {% csrf_token %}
