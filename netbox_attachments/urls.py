@@ -52,6 +52,11 @@ urlpatterns = (
         "netbox-attachments/<int:pk>/",
         include(get_model_urls("netbox_attachments", "netboxattachment")),
     ),
+    path(
+        "netbox-attachment-panel/",
+        views.NetBoxAttachmentPanelListView.as_view(),
+        name="netboxattachment_panel_list",
+    ),
     # Assignment views
     path(
         "netbox-attachment-assignments/",

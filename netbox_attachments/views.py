@@ -149,6 +149,22 @@ class NetBoxAttachmentAssignmentListView(generic.ObjectListView):
     actions = {"export": set()}
 
 
+class NetBoxAttachmentPanelListView(generic.ObjectListView):
+    """Assignment list used by the inline panel (left/right/full_width display modes).
+
+    Accepts object_type_id and object_id query params (via NetBoxAttachmentAssignmentFilterSet)
+    to scope the table to a single object — mirrors what AttachmentTabView does for the tab mode.
+    """
+
+    queryset = models.NetBoxAttachmentAssignment.objects.select_related("attachment").prefetch_related(
+        "attachment__tags",
+        "attachment__attachment_assignments",
+    )
+    table = tables.NetBoxAttachmentForObjectTable
+    filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
+    actions = {}
+
+
 class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
     """
     Unlinks an attachment assignment from an object.
