@@ -1,28 +1,11 @@
 import logging
 from typing import List, Type
 
-from django.conf import settings
 from django.db.utils import OperationalError
 
-from netbox_attachments.utils import is_custom_object_model, validate_object_type
+from netbox_attachments.utils import _get_plugin_settings, is_custom_object_model, validate_object_type
 
 logger = logging.getLogger(__name__)
-
-
-def _get_plugin_settings():
-    try:
-        plugins_config = getattr(settings, "PLUGINS_CONFIG", {})
-    except Exception:
-        return {}
-
-    if not isinstance(plugins_config, dict):
-        return {}
-
-    plugin_settings = plugins_config.get("netbox_attachments", {})
-    if not isinstance(plugin_settings, dict):
-        return {}
-
-    return plugin_settings
 
 
 def _resolve_display_preference(app_model_name: str, plugin_settings: dict) -> str:
