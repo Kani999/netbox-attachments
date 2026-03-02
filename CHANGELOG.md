@@ -53,6 +53,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - `__init__.py`: narrow `except ImportError` to `except ModuleNotFoundError` for the `PluginConfig` fallback.
 - `utils.py`: `_get_plugin_settings()` now also catches `ImproperlyConfigured` so the helper is safe to call before Django is fully configured.
 - `pyproject.toml`: populate `dependencies` with `django>=5.0,<6.0`; NetBox compatibility enforced at runtime via `min_version`/`max_version` in `PluginConfig` (the `netbox` PyPI package is a placeholder and cannot be used as a pip dependency).
+- `NetBoxAttachmentLinkView`: "Save and Add Another" crashed with `ValueError: Field 'id' expected a number but got 'None'` in the attachment-forward flow because `get_extra_addanother_params` forwarded `object_type=None&object_id=None`, turning `None` into the literal string `"None"` — a truthy value that bypassed the guard in `alter_object` and caused `get_object_or_404` to fail. `get_extra_addanother_params` now detects flow direction and forwards only the relevant params; both `alter_object` methods parse GET params with `int()` inside `try/except` instead of truthy-string checks.
 
 ## [10.0.0] - 2025-11-11
 

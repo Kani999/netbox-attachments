@@ -51,21 +51,20 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
 
     def alter_object(self, instance, request, args, kwargs):
         if not instance.pk:
-            object_type_id = request.GET.get("object_type") or None
-            object_id = request.GET.get("object_id") or None
+            try:
+                object_type_id = int(request.GET.get("object_type", ""))
+                object_id = int(request.GET.get("object_id", ""))
+            except (TypeError, ValueError):
+                return instance
             if object_type_id and object_id:
                 object_type = get_object_or_404(get_enabled_object_type_queryset(), pk=object_type_id)
                 model = object_type.model_class()
                 if model is None:
                     return instance
-                try:
-                    target_pk = int(object_id)
-                except (TypeError, ValueError):
-                    return instance
-                get_object_or_404(model, pk=target_pk)
+                get_object_or_404(model, pk=object_id)
                 # Pass validated assignment context to the form's save() via instance attributes
                 instance._pending_object_type_id = object_type.pk
-                instance._pending_object_id = target_pk
+                instance._pending_object_id = object_id
         return instance
 
     def get_extra_addanother_params(self, request):
@@ -108,32 +107,37 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
 
     def alter_object(self, instance, request, args, kwargs):
         if not instance.pk:
-            object_type_id = request.GET.get("object_type") or None
-            object_id = request.GET.get("object_id") or None
-            # Only pre-populate when both are provided (forward flow from a detail page).
-            # When only object_type is present the request is an HTMX re-render; leave
-            # the instance untouched so the form can detect the selection via get_field_value.
+            try:
+                object_type_id = int(request.GET.get("object_type", ""))
+                object_id = int(request.GET.get("object_id", ""))
+            except (TypeError, ValueError):
+                return instance
+            # Only pre-populate when both are valid integers (forward flow from a
+            # detail page).  HTMX re-renders supply only object_type; they are
+            # rejected above, leaving the instance untouched so the form resolves
+            # the selection via get_field_value.
             if object_type_id and object_id:
                 object_type = get_object_or_404(get_enabled_object_type_queryset(), pk=object_type_id)
                 model = object_type.model_class()
                 if model is None:
                     return instance
-                try:
-                    target_pk = int(object_id)
-                except (TypeError, ValueError):
-                    return instance
-                get_object_or_404(model, pk=target_pk)
+                get_object_or_404(model, pk=object_id)
                 instance.object_type = object_type
-                instance.object_id = target_pk
+                instance.object_id = object_id
         return instance
 
     def get_extra_addanother_params(self, request):
-        # Do not forward attachment — leave it blank so the next form is visibly empty,
-        # confirming the previous link was saved and prompting the user to pick a new one.
+        return_url = request.GET.get("return_url")
+        if request.GET.get("attachment"):
+            # Attachment-forward flow: keep attachment pre-selected so the user
+            # only needs to pick a new target object for the next assignment.
+            return {"attachment": request.GET["attachment"], "return_url": return_url}
+        # Object-forward flow: keep object context so the user keeps linking
+        # attachments to the same object.
         return {
             "object_type": request.GET.get("object_type"),
             "object_id": request.GET.get("object_id"),
-            "return_url": request.GET.get("return_url"),
+            "return_url": return_url,
         }
 
 
