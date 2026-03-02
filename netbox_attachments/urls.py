@@ -52,7 +52,12 @@ urlpatterns = (
         "netbox-attachments/<int:pk>/",
         include(get_model_urls("netbox_attachments", "netboxattachment")),
     ),
-    # Assignment (unlink) views
+    # Assignment views
+    path(
+        "netbox-attachment-assignments/",
+        views.NetBoxAttachmentAssignmentListView.as_view(),
+        name="netboxattachmentassignment_list",
+    ),
     path(
         "netbox-attachment-assignments/<int:pk>/delete/",
         views.NetBoxAttachmentAssignmentDeleteView.as_view(),

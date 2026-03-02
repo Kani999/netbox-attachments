@@ -120,6 +120,9 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # NetBoxModelForm injects tags regardless of Meta.fields; remove it until
+        # assignment tags are intentionally surfaced (see TODO.md item 7).
+        self.fields.pop("tags", None)
         if self.instance and self.instance.object_type_id:
             # Forward flow: object already resolved — hide picker fields
             del self.fields["object_type"]
@@ -228,6 +231,27 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
         ),
     )
     tag = TagFilterField(model)
+
+
+class NetBoxAttachmentAssignmentFilterForm(NetBoxModelFilterSetForm):
+    model = NetBoxAttachmentAssignment
+    q = forms.CharField(required=False, label=_("Search"))
+    attachment_id = DynamicModelChoiceField(
+        queryset=NetBoxAttachment.objects.all(),
+        required=False,
+        label=_("Attachment"),
+        widget=APISelect(
+            api_url="/api/plugins/netbox-attachments/netbox-attachments/",
+        ),
+    )
+    object_type_id = DynamicModelChoiceField(
+        queryset=ObjectType.objects.all(),
+        required=False,
+        label=_("Object Type"),
+        widget=APISelect(
+            api_url="/api/core/object-types/",
+        ),
+    )
 
 
 class NetBoxAttachmentBulkEditForm(NetBoxModelBulkEditForm):

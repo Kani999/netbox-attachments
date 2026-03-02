@@ -128,9 +128,21 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
         return instance
 
     def get_extra_addanother_params(self, request):
+        # Do not forward attachment — leave it blank so the next form is visibly empty,
+        # confirming the previous link was saved and prompting the user to pick a new one.
         return {
-            "attachment": request.POST.get("attachment"),
+            "object_type": request.GET.get("object_type"),
+            "object_id": request.GET.get("object_id"),
+            "return_url": request.GET.get("return_url"),
         }
+
+
+class NetBoxAttachmentAssignmentListView(generic.ObjectListView):
+    queryset = models.NetBoxAttachmentAssignment.objects.prefetch_related("attachment", "object_type")
+    table = tables.NetBoxAttachmentAssignmentTable
+    filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
+    filterset_form = forms.NetBoxAttachmentAssignmentFilterForm
+    actions = {"export": set()}
 
 
 class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
