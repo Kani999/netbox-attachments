@@ -229,11 +229,11 @@ def test_object_attachment_for_object_table_has_links_column():
     assert 'verbose_name="Links"' in source
 
 
-def test_object_attachment_links_count_uses_prefetch_cache_safe_filter():
-    """The Links count template must use |length (prefetch-cache safe), not |count."""
+def test_object_attachment_links_count_uses_annotation():
+    """The Links count template must use a queryset annotation, not a per-row SQL call."""
     source = _TABLES_PY.read_text()
-    # |length works off the prefetch cache; |count would issue an extra SQL query per row
-    assert "attachment_assignments.all|length" in source
+    # attachment_link_count is a Count annotation computed in the main query — zero extra SQL per row
+    assert "attachment_link_count" in source
 
 
 def test_object_attachment_for_object_table_links_in_default_columns():
