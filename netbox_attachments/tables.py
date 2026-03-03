@@ -3,11 +3,6 @@ from netbox.tables import NetBoxTable, columns
 
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 
-ATTACHMENT_LINK = """
-<a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=record.pk %}">
-    {{ record }}
-</a>
-"""
 FILE_SIZE = "{{ record.size|filesizeformat }}"
 DOWNLOAD_BUTTON = """
 <a href="{{record.file.url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary download-attachment" title="Download">
@@ -103,7 +98,7 @@ def get_missing_parent_row_class(record):
 
 
 class NetBoxAttachmentTable(NetBoxTable):
-    name = tables.TemplateColumn(template_code=ATTACHMENT_LINK)
+    name = tables.Column(accessor="name", verbose_name="Name", orderable=True, linkify=True)
     parent = tables.TemplateColumn(
         template_code=PARENT_COLUMN,
         verbose_name="Assigned To",

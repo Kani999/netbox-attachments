@@ -20,7 +20,13 @@
                         <tr>
                             <th scope="row">Filename</th>
                             <td>
-                                <a href="{{ object.file.url }}" target="_blank" rel="noopener">{{ object.filename }}</a>
+                                <div class="d-flex align-items-center gap-2">
+                                    {{ object.filename }}
+                                    <a href="{{ object.file.url }}" target="_blank" rel="noopener noreferrer"
+                                       class="btn btn-sm btn-primary download-attachment" title="Download">
+                                        <i class="mdi mdi-download"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <tr>
