@@ -69,6 +69,7 @@ class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):
 @register_filterset
 class NetBoxAttachmentAssignmentFilterSet(NetBoxModelFilterSet):
     q = django_filters.CharFilter(method="search", label="Search")
+    tag = TagFilter()
     attachment_id = django_filters.NumberFilter(
         field_name="attachment_id",
         label="Attachment (ID)",

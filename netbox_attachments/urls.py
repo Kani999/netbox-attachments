@@ -25,12 +25,10 @@ urlpatterns = (
     # Assignment views
     path(
         "netbox-attachment-assignments/",
-        views.NetBoxAttachmentAssignmentListView.as_view(),
-        name="netboxattachmentassignment_list",
+        include(get_model_urls("netbox_attachments", "netboxattachmentassignment", detail=False)),
     ),
     path(
-        "netbox-attachment-assignments/<int:pk>/delete/",
-        views.NetBoxAttachmentAssignmentDeleteView.as_view(),
-        name="netboxattachmentassignment_delete",
+        "netbox-attachment-assignments/<int:pk>/",
+        include(get_model_urls("netbox_attachments", "netboxattachmentassignment")),
     ),
 )

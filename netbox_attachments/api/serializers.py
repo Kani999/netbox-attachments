@@ -27,6 +27,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
             "object_type",
             "object_id",
             "parent",
+            "tags",
             "created",
             "last_updated",
         ]

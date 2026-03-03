@@ -13,6 +13,7 @@
                 </div>
             </div>
             {% render_field form.attachment %}
+            {% render_field form.tags %}
         {% else %}
             {# Reverse flow: let user pick the target object #}
             {% render_form form %}

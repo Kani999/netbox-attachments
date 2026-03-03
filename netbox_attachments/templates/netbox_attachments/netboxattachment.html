@@ -11,7 +11,7 @@
                     <table class="table table-hover attr-table">
                         <tr>
                             <th scope="row">Name</th>
-                            <td>{{ object }}</td>
+                            <td>{{ object.name }}</td>
                         </tr>
                         <tr>
                             <th scope="row">Description</th>
@@ -22,8 +22,11 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     {{ object.filename }}
-                                    <a href="{{ object.file.url }}" target="_blank" rel="noopener noreferrer"
-                                       class="btn btn-sm btn-primary download-attachment" title="Download">
+                                    <a href="{{ object.file.url }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn btn-sm btn-primary download-attachment"
+                                       title="Download">
                                         <i class="mdi mdi-download"></i>
                                     </a>
                                 </div>

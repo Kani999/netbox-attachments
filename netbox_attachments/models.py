@@ -121,7 +121,8 @@ class NetBoxAttachmentAssignment(NetBoxModel):
         ]
 
     def __str__(self):
-        return f"Assignment #{self.pk}"
+        label = self.attachment.name or self.attachment.filename
+        return f"{label} → {self.object_type} #{self.object_id}"
 
     def get_display(self):
         """Rich display — only call when parent is prefetched or single-object context."""
@@ -145,7 +146,7 @@ class NetBoxAttachmentAssignment(NetBoxModel):
             return None
 
     def get_absolute_url(self):
-        return self.attachment.get_absolute_url()
+        return reverse("plugins:netbox_attachments:netboxattachmentassignment", args=[self.pk])
 
 
 @receiver(pre_delete)

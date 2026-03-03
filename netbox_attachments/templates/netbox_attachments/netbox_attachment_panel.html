@@ -5,7 +5,7 @@
     <div class="col col-md-12">
         <div class="card">
             <h5 class="card-header">
-                {% trans "Attachments" %}
+                {% trans "Attachment Assignments" %}
                 <div class="card-actions">
                     {% if perms.netbox_attachments.add_netboxattachment %}
                         <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path|urlencode }}"
