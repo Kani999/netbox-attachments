@@ -158,8 +158,8 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
                             required=True,
                             label=_(model._meta.verbose_name.title()),
                         )
-                except ObjectType.DoesNotExist:
-                    pass  # Type not found; object picker stays disabled
+                except (ObjectType.DoesNotExist, ValueError):
+                    pass  # Invalid or missing pk; object picker stays disabled
                 except (AttributeError, TypeError):
                     pass  # model_class() returned None or model has no manager
 
