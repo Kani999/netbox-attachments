@@ -1,7 +1,6 @@
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
+
 from netbox.views import generic
 from utilities.views import register_model_view
 
@@ -71,10 +70,15 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
         return instance
 
     def get_extra_addanother_params(self, request):
+        return_url = request.GET.get("return_url")
+        if return_url and not url_has_allowed_host_and_scheme(
+            return_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            return_url = None
         return {
             "object_type": request.GET.get("object_type"),
             "object_id": request.GET.get("object_id"),
-            "return_url": request.GET.get("return_url"),
+            "return_url": return_url,
         }
 
 
@@ -131,6 +135,10 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
 
     def get_extra_addanother_params(self, request):
         return_url = request.GET.get("return_url")
+        if return_url and not url_has_allowed_host_and_scheme(
+            return_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            return_url = None
         if request.GET.get("attachment"):
             # Attachment-forward flow: keep attachment pre-selected so the user
             # only needs to pick a new target object for the next assignment.
@@ -171,10 +179,13 @@ class NetBoxAttachmentPanelListView(generic.ObjectListView):
     to scope the table to a single object — mirrors what AttachmentTabView does for the tab mode.
     """
 
-    queryset = models.NetBoxAttachmentAssignment.objects.select_related("attachment").prefetch_related(
-        "tags",
-        "attachment__tags",
-        "attachment__attachment_assignments",
+    queryset = (
+        models.NetBoxAttachmentAssignment.objects.select_related("attachment")
+        .prefetch_related(
+            "tags",
+            "attachment__tags",
+        )
+        .annotate(attachment_link_count=models.Count("attachment__attachment_assignments", distinct=True))
     )
     table = tables.NetBoxAttachmentForObjectTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
@@ -211,31 +222,4 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
     """
 
     queryset = models.NetBoxAttachmentAssignment.objects.all()
-    default_return_url = "plugins:netbox_attachments:netboxattachment_list"
-
-    def _get_safe_return_url(self, request):
-        candidate = request.POST.get("return_url") or request.GET.get("return_url")
-        if candidate and url_has_allowed_host_and_scheme(
-            candidate,
-            allowed_hosts={request.get_host()},
-            require_https=request.is_secure(),
-        ):
-            return candidate
-        return reverse("plugins:netbox_attachments:netboxattachment_list")
-
-    def post(self, request, *args, **kwargs):
-        assignment = get_object_or_404(
-            models.NetBoxAttachmentAssignment.objects.restrict(request.user, "delete"),
-            pk=kwargs["pk"],
-        )
-        attachment = assignment.attachment
-
-        # Delete the assignment only; the attachment persists
-        assignment.delete()
-
-        messages.success(
-            request,
-            f"Attachment '{attachment}' has been unlinked from this object.",
-        )
-
-        return redirect(self._get_safe_return_url(request))
+    default_return_url = "plugins:netbox_attachments:netboxattachmentassignment_list"

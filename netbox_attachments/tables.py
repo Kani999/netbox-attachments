@@ -58,7 +58,7 @@ ASSIGNMENT_ATTACHMENT_LINK = """
 ATTACHMENT_ASSIGNMENT_SIZE = "{{ record.attachment.size|filesizeformat }}"
 
 OBJECT_ATTACHMENT_LINKS_COUNT = """
-<a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment.attachment_assignments.all|length }}</a>
+<a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment_link_count }}</a>
 """
 
 OBJECT_ATTACHMENT_ACTIONS = """
@@ -70,8 +70,7 @@ OBJECT_ATTACHMENT_ACTIONS = """
 
 
 def get_missing_parent_row_class(record):
-    assignments = record.attachment_assignments.all()
-    if not assignments.exists():
+    if not record.attachment_assignments.all():
         return "danger"
     return ""
 

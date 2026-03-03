@@ -1,6 +1,7 @@
 import logging
 from typing import List, Type
 
+from django.db.models import Count
 from django.db.utils import OperationalError
 
 from netbox_attachments.utils import _get_plugin_settings, is_custom_object_model, validate_object_type
@@ -112,7 +113,8 @@ def register_attachment_tab_view(model) -> str:
                 )
                 .restrict(request.user, "view")
                 .select_related("attachment")
-                .prefetch_related("tags", "attachment__tags", "attachment__attachment_assignments")
+                .prefetch_related("tags", "attachment__tags")
+                .annotate(attachment_link_count=Count("attachment__attachment_assignments", distinct=True))
             )
 
     register_model_view(model, name=view_name, path=view_path)(AttachmentTabView)
