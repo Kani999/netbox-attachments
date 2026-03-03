@@ -87,10 +87,6 @@ class NetBoxAttachment(NetBoxModel):
 
         super().save(*args, **kwargs)
 
-    def to_objectchange(self, action):
-        objectchange = super().to_objectchange(action)
-        return objectchange
-
 
 class NetBoxAttachmentAssignment(NetBoxModel):
     """
