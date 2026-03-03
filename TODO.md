@@ -4,26 +4,6 @@ Lightweight backlog for future maintenance and improvement tasks.
 
 ---
 
-## Done
-
-### 5. Defer DB access during NetBox app initialization
-
-Restructured `validate_object_type()` in `utils.py` to defer the `CustomObjectType` DB lookup.
-In the default `applied_scope = "app"` mode, zero DB queries are made at startup.
-In `applied_scope = "model"` mode, the app-label short-circuit avoids the DB query when
-the whole app is listed in `scope_filter`; the DB is only hit for custom objects when a
-specific model-name lookup is actually required.
-
-Eliminates `RuntimeWarning: Accessing the database during app initialization is discouraged.`
-
-### 6. Suppress exception chaining in serializers `validate()`
-
-Added `from None` when re-raising `ObjectDoesNotExist` as `serializers.ValidationError`
-in `netbox_attachments/api/serializers.py`. Suppresses the original exception context from
-tracebacks.
-
----
-
 ## Open Items
 
 ### 2. Migrate repository to CESNET GitHub organisation
@@ -38,17 +18,6 @@ A future improvement would let users assign one attachment to **multiple objects
 (e.g. select object type → multi-select from the object list → one submit creates N assignments).
 
 Starting scope: same object type only (avoids mixed-type API complexity).
-
-### 7. Add tags to assignments
-
-`NetBoxAttachmentAssignment` already inherits a `tags` M2M field from `NetBoxModel` (no migration needed).
-Wire it up when ready:
-
-- `tables.py` — add `tags = columns.TagColumn(url_name="plugins:netbox_attachments:netboxattachmentassignment_list")` to `NetBoxAttachmentAssignmentTable` and include `"tags"` in `fields`/`default_columns`
-- `forms.py` — add `"tags"` to `NetBoxAttachmentLinkForm.Meta.fields` and add `tag = TagFilterField(model)` to `NetBoxAttachmentAssignmentFilterForm`
-- `filtersets.py` — add `tag = TagFilter()` to `NetBoxAttachmentAssignmentFilterSet`
-- `templates/netbox_attachments/netbox_attachment_link.html` — add `{% render_field form.tags %}` in the forward-flow branch (after `form.attachment`)
-- `tests/test_new_features.py` — restore the `test_assignment_filter_form_declares_tag_filter_field` test
 
 ### 8. Bulk-unlink on the object attachment tab
 
