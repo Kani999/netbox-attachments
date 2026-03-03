@@ -1,3 +1,4 @@
+import logging
 import os
 
 from core.models.object_types import ObjectType
@@ -11,6 +12,8 @@ from netbox.models import NetBoxModel
 from utilities.querysets import RestrictedQuerySet
 
 from netbox_attachments.utils import attachment_upload
+
+logger = logging.getLogger(__name__)
 
 
 class NetBoxAttachment(NetBoxModel):
@@ -76,7 +79,8 @@ class NetBoxAttachment(NetBoxModel):
 
         try:
             self.size = self.file.size
-        except OSError:
+        except (OSError, ValueError) as exc:
+            logger.warning("Could not determine file size for attachment pk=%s: %s", self.pk, exc)
             self.size = None
 
         if not self.name:
