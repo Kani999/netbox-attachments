@@ -28,33 +28,32 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Changed
 
 - NetBox compatibility locked to `4.5.x` in plugin runtime bounds.
-- Project packaging migrated to `pyproject.toml`; `setuptools` minimum requirement bumped.
+- Project packaging migrated to `pyproject.toml`; `setuptools` minimum requirement bumped; `dependencies` populated with `django>=5.0,<6.0`; NetBox compatibility enforced at runtime via `min_version`/`max_version`.
 - `MANIFEST.in` corrected to include `docs/` in sdist.
 - README aligned to current compatibility policy and support channels.
 - Unlinking the last assignment no longer auto-deletes the attachment or its file. Attachments now persist until explicitly deleted.
 - `ObjectType` queryset scan now uses `.only("id").iterator()` for memory efficiency when resolving enabled models.
+- Panel display modes (`left_page`, `right_page`, `full_width_page`) now render per-row Download and Unlink buttons via a dedicated `NetBoxAttachmentPanelListView` backed by `NetBoxAttachmentForObjectTable`, matching `additional_tab` behaviour.
+- Unlink confirmation displays `app_label > model #id` (e.g., `dcim > circuit #224`) instead of the ContentType verbose name (issue #3).
+- Redirect after unlinking the last assignment now goes to the attachment list instead of a stale attachment URL.
+- Filter form boolean fields use `BooleanField` with an explicit `Select` widget instead of `NullBooleanField`.
+- Exception handlers narrowed from bare `except` clauses to specific exception types throughout.
+- `template_content.py` render functions guard against missing request context before rendering.
+- `OSError` when reading file size on save is caught; `size` field stores `null` instead of raising.
+- `CustomObjectType` DB lookup in `validate_object_type` deferred to avoid startup `RuntimeWarning`.
+- Exception chaining suppressed in serializer `validate()` for cleaner error tracebacks.
+- Bulk-view `prefetch_related` traverses `attachment_assignments__object_type` to avoid N+1 queries on the "Assigned To" column.
+- `__init__.py`: `except ImportError` narrowed to `except ModuleNotFoundError` for the `PluginConfig` fallback.
+- `utils.py`: `_get_plugin_settings()` also catches `ImproperlyConfigured` so the helper is safe to call before Django is fully configured.
+- `NetBoxAttachmentLinkView`: "Save and Add Another" now correctly detects flow direction and forwards only the relevant GET params, avoiding a `ValueError` when `object_type`/`object_id` were absent.
+- `NetBoxAttachmentForObjectTable`: `tags` column added to `default_columns` so assignment tag badges are visible by default on object detail Attachments tabs and inline panels.
+- `NetBoxAttachmentForObjectTable`: `TagColumn.url_name` corrected to `netboxattachmentassignment_list` (was `netboxattachment_list`).
+- Assignment querysets in `AttachmentTabView.get_children()`, `NetBoxAttachmentAssignmentListView`, and `NetBoxAttachmentPanelListView` now `prefetch_related("tags")` so assignment tag badges render without N+1 queries.
 
 ### Security
 
 - `return_url` redirect targets validated with `url_has_allowed_host_and_scheme` before redirecting.
 - Templates updated with `rel="noopener"` on external links and `urlencode` filter on URL parameters.
-
-### Fixed
-
-- Panel display modes (`left_page`, `right_page`, `full_width_page`) now render per-row Download and Unlink buttons, matching `additional_tab` behaviour. Previously the panel used `netboxattachment_list` / `NetBoxAttachmentTable`, which omitted the Unlink button and showed a spurious "Link Existing" button in each row. A dedicated `NetBoxAttachmentPanelListView` (backed by `NetBoxAttachmentForObjectTable`, filtered by `object_type_id`/`object_id`) is now registered at `/netbox-attachment-panel/` and used by `netbox_attachment_panel.html`.
-- Unlink confirmation for broken/stale assignments now displays `app_label > model #id` (e.g., `dcim > circuit #224`) instead of the ContentType verbose name (issue #3).
-- Redirect to a deleted attachment URL after unlinking the last assignment (404 error).
-- Filter form boolean fields use `BooleanField` with an explicit `Select` widget instead of `NullBooleanField`.
-- Exception handlers narrowed from bare `except` clauses to specific exception types.
-- `template_content.py` render functions guard against missing request context before rendering.
-- Handle `OSError` when reading file size on save — `size` field now stores `null` instead of raising; this is reflected in the API response.
-- Defer `CustomObjectType` DB lookup in `validate_object_type` to avoid startup `RuntimeWarning`.
-- Suppress exception chaining in serializer `validate()` for cleaner error tracebacks.
-- Bulk-view `prefetch_related` now traverses `attachment_assignments__object_type` to avoid N+1 queries on the "Assigned To" column.
-- `__init__.py`: narrow `except ImportError` to `except ModuleNotFoundError` for the `PluginConfig` fallback.
-- `utils.py`: `_get_plugin_settings()` now also catches `ImproperlyConfigured` so the helper is safe to call before Django is fully configured.
-- `pyproject.toml`: populate `dependencies` with `django>=5.0,<6.0`; NetBox compatibility enforced at runtime via `min_version`/`max_version` in `PluginConfig` (the `netbox` PyPI package is a placeholder and cannot be used as a pip dependency).
-- `NetBoxAttachmentLinkView`: "Save and Add Another" crashed with `ValueError: Field 'id' expected a number but got 'None'` in the attachment-forward flow because `get_extra_addanother_params` forwarded `object_type=None&object_id=None`, turning `None` into the literal string `"None"` — a truthy value that bypassed the guard in `alter_object` and caused `get_object_or_404` to fail. `get_extra_addanother_params` now detects flow direction and forwards only the relevant params; both `alter_object` methods parse GET params with `int()` inside `try/except` instead of truthy-string checks.
 
 ## [10.0.0] - 2025-11-11
 
