@@ -19,11 +19,12 @@ import pytest
 
 _ROOT = pathlib.Path(__file__).parent.parent  # netbox_attachments/
 
-_TEMPLATE = _ROOT / "templates" / "netbox_attachments" / "netboxattachmentassignment_delete.html"
+_TEMPLATE = _ROOT / "templates" / "netbox_attachments" / "netboxattachmentassignment.html"
 _FORMS_PY = _ROOT / "forms.py"
 _TABLES_PY = _ROOT / "tables.py"
 _NAV_PY = _ROOT / "navigation.py"
 _URLS_PY = _ROOT / "urls.py"
+_VIEWS_PY = _ROOT / "views.py"
 
 
 # ===========================================================================
@@ -88,7 +89,7 @@ def get_children_replica(parent, NetBoxAttachmentAssignment, ObjectType):
         )
         .restrict(MagicMock(), "view")
         .select_related("attachment")
-        .prefetch_related("attachment__tags", "attachment__attachment_assignments")
+        .prefetch_related("tags", "attachment__tags", "attachment__attachment_assignments")
     )
 
 
@@ -142,7 +143,9 @@ def test_get_children_prefetches_attachment_and_tags():
 
     # FK traversal uses select_related (single JOIN); M2M/reverse-FK use prefetch_related
     after_restrict.select_related.assert_called_once_with("attachment")
-    after_select.prefetch_related.assert_called_once_with("attachment__tags", "attachment__attachment_assignments")
+    after_select.prefetch_related.assert_called_once_with(
+        "tags", "attachment__tags", "attachment__attachment_assignments"
+    )
 
 
 def test_get_children_returns_prefetched_queryset():
@@ -172,6 +175,15 @@ def test_assignment_filter_form_declares_object_type_id_field():
     assert "object_type_id" in source
 
 
+def test_assignment_filter_form_declares_tag_filter_field():
+    """NetBoxAttachmentAssignmentFilterForm must expose a tag filter field."""
+    source = _FORMS_PY.read_text()
+    assert "TagFilterField" in source
+    # Verify the tag field is inside the assignment filter form (not only attachment form)
+    idx_class = source.index("NetBoxAttachmentAssignmentFilterForm")
+    assert "tag = TagFilterField" in source[idx_class:]
+
+
 # ===========================================================================
 # Feature 4 — Tables: NetBoxAttachmentForObjectTable structure
 # ===========================================================================
@@ -183,24 +195,25 @@ def test_tables_py_defines_netbox_attachment_for_object_table():
 
 
 def test_object_attachment_actions_references_assignment_delete_url():
+    """Unlink is handled by ActionsColumn (via registered delete view), not OBJECT_ATTACHMENT_ACTIONS."""
     source = _TABLES_PY.read_text()
-    # The OBJECT_ATTACHMENT_ACTIONS template string must link to the delete view
-    assert "netboxattachmentassignment_delete" in source
+    # ActionsColumn auto-generates the delete (unlink) button for registered model views;
+    # OBJECT_ATTACHMENT_ACTIONS supplies only the download extra button.
+    assert "OBJECT_ATTACHMENT_ACTIONS" in source
+    assert "columns.ActionsColumn" in source
 
 
 def test_object_attachment_actions_guards_with_delete_permission():
+    """Assign extra button in DOWNLOAD_BUTTON is gated behind add permission."""
     source = _TABLES_PY.read_text()
-    assert "perms.netbox_attachments.delete_netboxattachmentassignment" in source
+    # ActionsColumn guards the delete action automatically; the assign button is explicit.
+    assert "perms.netbox_attachments.add_netboxattachmentassignment" in source
 
 
-def test_unlink_button_guards_with_delete_permission():
-    """UNLINK_BUTTON must be wrapped in the delete_netboxattachmentassignment permission guard."""
+def test_for_object_table_uses_actions_column():
+    """NetBoxAttachmentForObjectTable uses ActionsColumn which auto-handles the delete permission."""
     source = _TABLES_PY.read_text()
-    # Locate UNLINK_BUTTON definition and verify the permission guard is inside it
-    start = source.index("UNLINK_BUTTON = ")
-    end = source.index('"""', start + len("UNLINK_BUTTON = ") + 3) + 3
-    unlink_button_src = source[start:end]
-    assert "perms.netbox_attachments.delete_netboxattachmentassignment" in unlink_button_src
+    assert "ActionsColumn(extra_buttons=OBJECT_ATTACHMENT_ACTIONS)" in source
 
 
 def test_assignment_table_has_tags_column():
@@ -269,15 +282,55 @@ def test_urls_py_registers_assignment_list_path():
 
 
 def test_urls_py_registers_assignment_list_name():
-    source = _URLS_PY.read_text()
-    # The list name must appear and be distinct from the delete name
-    assert "netboxattachmentassignment_list" in source
+    # URLs now use get_model_urls — the list view is registered via @register_model_view
+    # in views.py (name="list" → netboxattachmentassignment_list).
+    source = _VIEWS_PY.read_text()
+    assert 'name="list"' in source
+    assert "NetBoxAttachmentAssignment" in source
 
 
 def test_urls_py_registers_assignment_delete_name_separately():
-    """Both list and delete names must be registered — they are two distinct paths."""
-    source = _URLS_PY.read_text()
-    assert "netboxattachmentassignment_list" in source
-    assert "netboxattachmentassignment_delete" in source
-    # Confirm they are separate names (appear more than once if needed, but exist)
-    assert source.index("netboxattachmentassignment_list") != source.index("netboxattachmentassignment_delete")
+    """List (name='list') and delete (name='delete') are both registered via @register_model_view."""
+    source = _VIEWS_PY.read_text()
+    assert 'name="list"' in source
+    assert 'name="delete"' in source
+    # Confirm they are separate decorator entries
+    assert source.index('name="list"') != source.index('name="delete"')
+
+
+# ===========================================================================
+# Feature 7 — Tags visible by default and prefetched without N+1 queries
+# ===========================================================================
+
+
+def test_object_attachment_for_object_table_tags_in_default_columns():
+    """'tags' must appear in NetBoxAttachmentForObjectTable.Meta.default_columns."""
+    source = _TABLES_PY.read_text()
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == "NetBoxAttachmentForObjectTable":
+            for inner in node.body:
+                if isinstance(inner, ast.ClassDef) and inner.name == "Meta":
+                    for stmt in inner.body:
+                        if (
+                            isinstance(stmt, ast.Assign)
+                            and any(isinstance(t, ast.Name) and t.id == "default_columns" for t in stmt.targets)
+                            and isinstance(stmt.value, (ast.Tuple, ast.List))
+                        ):
+                            cols = [e.value for e in stmt.value.elts if isinstance(e, ast.Constant)]
+                            assert "tags" in cols, f"'tags' not in default_columns: {cols}"
+                            return
+    pytest.fail("NetBoxAttachmentForObjectTable.Meta.default_columns not found")
+
+
+def test_views_py_assignment_list_prefetches_tags():
+    """NetBoxAttachmentAssignmentListView queryset must prefetch 'tags' for badge rendering."""
+    source = _VIEWS_PY.read_text()
+    assert 'prefetch_related("attachment", "object_type", "tags")' in source
+
+
+def test_views_py_panel_list_prefetches_tags():
+    """NetBoxAttachmentPanelListView queryset must prefetch both 'tags' and 'attachment__tags'."""
+    source = _VIEWS_PY.read_text()
+    assert '"tags"' in source
+    assert '"attachment__tags"' in source
