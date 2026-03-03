@@ -96,10 +96,8 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
 
     attachment = DynamicModelChoiceField(
         queryset=NetBoxAttachment.objects.all(),
+        selector=True,
         label=_("Attachment"),
-        widget=APISelect(
-            api_url="/api/plugins/netbox-attachments/netbox-attachments/",
-        ),
     )
     object_type = ContentTypeChoiceField(
         queryset=ObjectType.objects.all(),
