@@ -56,11 +56,13 @@ ASSIGNMENT_PARENT_COLUMN = """
 """
 
 UNLINK_BUTTON = """
+{% if perms.netbox_attachments.delete_netboxattachmentassignment %}
 <a href="{% url 'plugins:netbox_attachments:netboxattachmentassignment_delete' pk=record.pk %}?return_url={{ request.path|urlencode }}"
    class="btn btn-sm btn-danger"
    title="Unlink">
     <i class="mdi mdi-link-off"></i>
 </a>
+{% endif %}
 """
 
 ASSIGNMENT_ATTACHMENT_LINK = """
@@ -74,16 +76,6 @@ OBJECT_ATTACHMENT_NAME_LINK = """
 """
 
 OBJECT_ATTACHMENT_SIZE = "{{ record.attachment.size|filesizeformat }}"
-
-OBJECT_ATTACHMENT_TAGS = """
-{% load helpers %}
-{% for tag in record.attachment.tags.all %}
-    <a href="{% url 'plugins:netbox_attachments:netboxattachment_list' %}?tag={{ tag.slug }}"
-       class="badge" style="color: #ffffff; background-color: #{{ tag.color }}">{{ tag }}</a>
-{% empty %}
-    <span class="text-muted">&mdash;</span>
-{% endfor %}
-"""
 
 OBJECT_ATTACHMENT_LINKS_COUNT = """
 <a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment.attachment_assignments.all|length }}</a>
@@ -211,10 +203,8 @@ class NetBoxAttachmentForObjectTable(NetBoxTable):
         verbose_name="Links",
         orderable=False,
     )
-    tags = tables.TemplateColumn(
-        template_code=OBJECT_ATTACHMENT_TAGS,
-        verbose_name="Tags",
-        orderable=False,
+    tags = columns.TagColumn(
+        url_name='plugins:netbox_attachments:netboxattachment_list'
     )
     actions = columns.ActionsColumn(actions=(), extra_buttons=OBJECT_ATTACHMENT_ACTIONS)
 
