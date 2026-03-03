@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from netbox.views import generic
@@ -17,7 +17,10 @@ class NetBoxAttachmentView(generic.ObjectView):
     )
 
     def get_extra_context(self, request, instance):
-        assignments_table = tables.NetBoxAttachmentAssignmentTable(instance.attachment_assignments.all())
+        assignments_table = tables.NetBoxAttachmentAssignmentTable(
+            instance.attachment_assignments.all(),
+            exclude=("attachment",),
+        )
         assignments_table.configure(request)
         return {
             "assignments_table": assignments_table,
@@ -141,12 +144,24 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
         }
 
 
+@register_model_view(models.NetBoxAttachmentAssignment, name="", detail=True)
+class NetBoxAttachmentAssignmentView(generic.ObjectView):
+    queryset = models.NetBoxAttachmentAssignment.objects.select_related("attachment", "object_type").prefetch_related(
+        "tags"
+    )
+
+
+@register_model_view(models.NetBoxAttachmentAssignment, name="list", path="", detail=False)
 class NetBoxAttachmentAssignmentListView(generic.ObjectListView):
-    queryset = models.NetBoxAttachmentAssignment.objects.prefetch_related("attachment", "object_type")
+    queryset = models.NetBoxAttachmentAssignment.objects.prefetch_related("attachment", "object_type", "tags")
     table = tables.NetBoxAttachmentAssignmentTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
     filterset_form = forms.NetBoxAttachmentAssignmentFilterForm
-    actions = {"export": set()}
+    actions = {
+        "export": set(),
+        "bulk_edit": {"change"},
+        "bulk_delete": {"delete"},
+    }
 
 
 class NetBoxAttachmentPanelListView(generic.ObjectListView):
@@ -157,6 +172,7 @@ class NetBoxAttachmentPanelListView(generic.ObjectListView):
     """
 
     queryset = models.NetBoxAttachmentAssignment.objects.select_related("attachment").prefetch_related(
+        "tags",
         "attachment__tags",
         "attachment__attachment_assignments",
     )
@@ -165,6 +181,29 @@ class NetBoxAttachmentPanelListView(generic.ObjectListView):
     actions = {}
 
 
+@register_model_view(models.NetBoxAttachmentAssignment, name="edit", detail=True)
+class NetBoxAttachmentAssignmentEditView(generic.ObjectEditView):
+    queryset = models.NetBoxAttachmentAssignment.objects.all()
+    form = forms.NetBoxAttachmentAssignmentForm
+
+
+@register_model_view(models.NetBoxAttachmentAssignment, "bulk_edit", path="edit", detail=False)
+class NetBoxAttachmentAssignmentBulkEditView(generic.BulkEditView):
+    queryset = models.NetBoxAttachmentAssignment.objects.all()
+    filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
+    table = tables.NetBoxAttachmentAssignmentTable
+    form = forms.NetBoxAttachmentAssignmentBulkEditForm
+
+
+@register_model_view(models.NetBoxAttachmentAssignment, "bulk_delete", path="delete", detail=False)
+class NetBoxAttachmentAssignmentBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.NetBoxAttachmentAssignment.objects.all()
+    filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
+    table = tables.NetBoxAttachmentAssignmentTable
+    default_return_url = "plugins:netbox_attachments:netboxattachmentassignment_list"
+
+
+@register_model_view(models.NetBoxAttachmentAssignment, name="delete", detail=True)
 class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
     """
     Unlinks an attachment assignment from an object.
@@ -200,20 +239,3 @@ class NetBoxAttachmentAssignmentDeleteView(generic.ObjectDeleteView):
         )
 
         return redirect(self._get_safe_return_url(request))
-
-    def get(self, request, *args, **kwargs):
-        assignment = get_object_or_404(
-            models.NetBoxAttachmentAssignment.objects.restrict(request.user, "delete"),
-            pk=kwargs["pk"],
-        )
-        attachment = assignment.attachment
-
-        return render(
-            request,
-            "netbox_attachments/netboxattachmentassignment_delete.html",
-            {
-                "object": assignment,
-                "attachment": attachment,
-                "return_url": self._get_safe_return_url(request),
-            },
-        )

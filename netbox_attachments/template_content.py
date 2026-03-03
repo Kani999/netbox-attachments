@@ -112,7 +112,7 @@ def register_attachment_tab_view(model) -> str:
                 )
                 .restrict(request.user, "view")
                 .select_related("attachment")
-                .prefetch_related("attachment__tags", "attachment__attachment_assignments")
+                .prefetch_related("tags", "attachment__tags", "attachment__attachment_assignments")
             )
 
     register_model_view(model, name=view_name, path=view_path)(AttachmentTabView)
