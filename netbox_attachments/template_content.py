@@ -31,7 +31,10 @@ def resolve_effective_display_preference(
 
 
 def render_attachment_panel(self) -> str:
-    model_name = self.models[0] if (hasattr(self, "models") and self.models) else self.model
+    model_name = self.models[0] if (hasattr(self, "models") and self.models) else getattr(self, "model", None)
+    if model_name is None:
+        logger.error("No model or models attribute found on extension")
+        return ""
     if "." not in str(model_name):
         logger.error(f"Invalid model name format: {model_name!r}")
         return ""
