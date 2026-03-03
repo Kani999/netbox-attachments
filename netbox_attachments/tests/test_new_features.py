@@ -8,9 +8,10 @@ other test modules in this package do.
 
 import ast
 import pathlib
-import pytest
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+
+import pytest
 
 # ---------------------------------------------------------------------------
 # Paths to source files used throughout the test suite
@@ -192,6 +193,16 @@ def test_object_attachment_actions_guards_with_delete_permission():
     assert "perms.netbox_attachments.delete_netboxattachmentassignment" in source
 
 
+def test_unlink_button_guards_with_delete_permission():
+    """UNLINK_BUTTON must be wrapped in the delete_netboxattachmentassignment permission guard."""
+    source = _TABLES_PY.read_text()
+    # Locate UNLINK_BUTTON definition and verify the permission guard is inside it
+    start = source.index("UNLINK_BUTTON = ")
+    end = source.index('"""', start + len("UNLINK_BUTTON = ") + 3) + 3
+    unlink_button_src = source[start:end]
+    assert "perms.netbox_attachments.delete_netboxattachmentassignment" in unlink_button_src
+
+
 def test_assignment_table_has_tags_column():
     """NetBoxAttachmentAssignmentTable must declare a tags column."""
     source = _TABLES_PY.read_text()
@@ -224,7 +235,7 @@ def test_object_attachment_for_object_table_links_in_default_columns():
                         if (
                             isinstance(stmt, ast.Assign)
                             and any(isinstance(t, ast.Name) and t.id == "default_columns" for t in stmt.targets)
-                            and isinstance(stmt.value, ast.Tuple)
+                            and isinstance(stmt.value, (ast.Tuple, ast.List))
                         ):
                             cols = [e.value for e in stmt.value.elts if isinstance(e, ast.Constant)]
                             assert "links" in cols, f"'links' not in default_columns: {cols}"
