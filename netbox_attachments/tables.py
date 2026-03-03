@@ -50,27 +50,12 @@ ASSIGNMENT_PARENT_COLUMN = """
 {% endif %}
 """
 
-UNLINK_BUTTON = """
-{% if perms.netbox_attachments.delete_netboxattachmentassignment %}
-<a href="{% url 'plugins:netbox_attachments:netboxattachmentassignment_delete' pk=record.pk %}?return_url={{ request.path|urlencode }}"
-   class="btn btn-sm btn-danger"
-   title="Unlink">
-    <i class="mdi mdi-link-off"></i>
-</a>
-{% endif %}
-"""
 
 ASSIGNMENT_ATTACHMENT_LINK = """
-<a href="{% url 'plugins:netbox_attachments:netboxattachment' pk=record.attachment.pk %}">
-    {{ record.attachment }}
-</a>
-"""
-
-OBJECT_ATTACHMENT_NAME_LINK = """
 <a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment }}</a>
 """
 
-OBJECT_ATTACHMENT_SIZE = "{{ record.attachment.size|filesizeformat }}"
+ATTACHMENT_ASSIGNMENT_SIZE = "{{ record.attachment.size|filesizeformat }}"
 
 OBJECT_ATTACHMENT_LINKS_COUNT = """
 <a href="{{ record.attachment.get_absolute_url }}">{{ record.attachment.attachment_assignments.all|length }}</a>
@@ -81,12 +66,6 @@ OBJECT_ATTACHMENT_ACTIONS = """
    class="btn btn-sm btn-primary" title="Download">
     <i class="mdi mdi-download"></i>
 </a>
-{% if perms.netbox_attachments.delete_netboxattachmentassignment %}
-<a href="{% url 'plugins:netbox_attachments:netboxattachmentassignment_delete' pk=record.pk %}?return_url={{ request.path|urlencode }}"
-   class="btn btn-sm btn-danger" title="Unlink">
-    <i class="mdi mdi-link-off"></i>
-</a>
-{% endif %}
 """
 
 
@@ -149,22 +128,33 @@ class NetBoxAttachmentAssignmentTable(NetBoxTable):
         verbose_name="Object",
         orderable=False,
     )
-    actions = columns.ActionsColumn(actions=(), extra_buttons=UNLINK_BUTTON)
+    description = tables.Column(accessor="attachment.description", verbose_name="Description", orderable=False)
+    file = tables.FileColumn(accessor="attachment.file", verbose_name="File", orderable=False)
+    size = tables.TemplateColumn(template_code=ATTACHMENT_ASSIGNMENT_SIZE, verbose_name="Size", orderable=False)
+    tags = columns.TagColumn(url_name="plugins:netbox_attachments:netboxattachmentassignment_list")
+    actions = columns.ActionsColumn(extra_buttons=OBJECT_ATTACHMENT_ACTIONS)
 
     class Meta(NetBoxTable.Meta):
         model = NetBoxAttachmentAssignment
         fields = (
             "pk",
+            "id",
             "attachment",
             "object_type",
             "parent",
+            "description",
+            "file",
+            "size",
+            "tags",
             "created",
             "actions",
         )
         default_columns = (
+            "id",
             "attachment",
             "object_type",
             "parent",
+            "tags",
             "created",
             "actions",
         )
@@ -174,7 +164,7 @@ class NetBoxAttachmentForObjectTable(NetBoxTable):
     """Table for displaying assignments on an object's attachment tab, with per-row unlink."""
 
     attachment_name = tables.TemplateColumn(
-        template_code=OBJECT_ATTACHMENT_NAME_LINK,
+        template_code=ASSIGNMENT_ATTACHMENT_LINK,
         verbose_name="Attachment",
         orderable=False,
     )
@@ -189,7 +179,7 @@ class NetBoxAttachmentForObjectTable(NetBoxTable):
         orderable=False,
     )
     size = tables.TemplateColumn(
-        template_code=OBJECT_ATTACHMENT_SIZE,
+        template_code=ATTACHMENT_ASSIGNMENT_SIZE,
         verbose_name="Size",
         orderable=False,
     )
@@ -198,12 +188,10 @@ class NetBoxAttachmentForObjectTable(NetBoxTable):
         verbose_name="Links",
         orderable=False,
     )
-    tags = columns.TagColumn(
-        url_name='plugins:netbox_attachments:netboxattachment_list'
-    )
-    actions = columns.ActionsColumn(actions=(), extra_buttons=OBJECT_ATTACHMENT_ACTIONS)
+    tags = columns.TagColumn(url_name="plugins:netbox_attachments:netboxattachmentassignment_list")
+    actions = columns.ActionsColumn(extra_buttons=OBJECT_ATTACHMENT_ACTIONS)
 
     class Meta(NetBoxTable.Meta):
         model = NetBoxAttachmentAssignment
-        fields = ("pk", "id", "attachment_name", "description", "file", "size", "links", "tags", "actions")
-        default_columns = ("attachment_name", "description", "file", "size", "links", "actions")
+        fields = ("pk", "id", "attachment_name", "description", "file", "size", "links", "tags", "created", "actions")
+        default_columns = ("attachment_name", "description", "size", "links", "tags", "created", "actions")
