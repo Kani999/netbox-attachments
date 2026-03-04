@@ -128,7 +128,7 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
             if object_type_id := get_field_value(self, "object_type"):
                 # Reverse flow after HTMX reload: enable object picker for chosen type
                 try:
-                    obj_type = ObjectType.objects.get(pk=object_type_id)
+                    obj_type = get_enabled_object_type_queryset().get(pk=object_type_id)
                     model = obj_type.model_class()
                     # Probe whether a REST API list URL exists for this model
                     try:
@@ -181,11 +181,14 @@ class NetBoxAttachmentLinkForm(NetBoxModelForm):
 
         # Duplicate-assignment check
         if attachment and object_type and object_id:
-            if NetBoxAttachmentAssignment.objects.filter(
+            qs = NetBoxAttachmentAssignment.objects.filter(
                 attachment=attachment,
                 object_type=object_type,
                 object_id=object_id,
-            ).exists():
+            )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
                 raise forms.ValidationError(_("This attachment is already linked to this object."))
 
         return cleaned_data
