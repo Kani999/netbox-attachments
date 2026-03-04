@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
 
@@ -28,6 +29,7 @@ class NetBoxAttachmentView(generic.ObjectView):
 
 @register_model_view(models.NetBoxAttachment, name="list", path="", detail=False)
 class NetBoxAttachmentListView(generic.ObjectListView):
+    template_name = "netbox_attachments/netboxattachment_list.html"
     actions = {
         "add": {"add"},
         "export": set(),
@@ -37,7 +39,7 @@ class NetBoxAttachmentListView(generic.ObjectListView):
     queryset = models.NetBoxAttachment.objects.prefetch_related(
         "attachment_assignments",
         "attachment_assignments__object_type",
-    )
+    ).annotate(assignment_count=Count("attachment_assignments", distinct=True))
     table = tables.NetBoxAttachmentTable
     filterset = filtersets.NetBoxAttachmentFilterSet
     filterset_form = forms.NetBoxAttachmentFilterForm
@@ -63,7 +65,7 @@ class NetBoxAttachmentEditView(generic.ObjectEditView):
                 model = object_type.model_class()
                 if model is None:
                     return instance
-                get_object_or_404(model, pk=object_id)
+                get_object_or_404(model.objects.restrict(request.user, "view"), pk=object_id)
                 # Pass validated assignment context to the form's save() via instance attributes
                 instance._pending_object_type_id = object_type.pk
                 instance._pending_object_id = object_id
@@ -90,7 +92,9 @@ class NetBoxAttachmentDeleteView(generic.ObjectDeleteView):
 
 @register_model_view(models.NetBoxAttachment, "bulk_edit", path="edit", detail=False)
 class NetBoxAttachmentBulkEditView(generic.BulkEditView):
-    queryset = models.NetBoxAttachment.objects.prefetch_related("attachment_assignments__object_type")
+    queryset = models.NetBoxAttachment.objects.prefetch_related("attachment_assignments__object_type").annotate(
+        assignment_count=Count("attachment_assignments", distinct=True)
+    )
     filterset = filtersets.NetBoxAttachmentFilterSet
     table = tables.NetBoxAttachmentTable
     form = forms.NetBoxAttachmentBulkEditForm
@@ -98,7 +102,9 @@ class NetBoxAttachmentBulkEditView(generic.BulkEditView):
 
 @register_model_view(models.NetBoxAttachment, "bulk_delete", path="delete", detail=False)
 class NetBoxAttachmentBulkDeleteView(generic.BulkDeleteView):
-    queryset = models.NetBoxAttachment.objects.prefetch_related("attachment_assignments__object_type")
+    queryset = models.NetBoxAttachment.objects.prefetch_related("attachment_assignments__object_type").annotate(
+        assignment_count=Count("attachment_assignments", distinct=True)
+    )
     filterset = filtersets.NetBoxAttachmentFilterSet
     table = tables.NetBoxAttachmentTable
     default_return_url = "plugins:netbox_attachments:netboxattachment_list"
@@ -128,7 +134,7 @@ class NetBoxAttachmentLinkView(generic.ObjectEditView):
                 model = object_type.model_class()
                 if model is None:
                     return instance
-                get_object_or_404(model, pk=object_id)
+                get_object_or_404(model.objects.restrict(request.user, "view"), pk=object_id)
                 instance.object_type = object_type
                 instance.object_id = object_id
         return instance
@@ -161,7 +167,9 @@ class NetBoxAttachmentAssignmentView(generic.ObjectView):
 
 @register_model_view(models.NetBoxAttachmentAssignment, name="list", path="", detail=False)
 class NetBoxAttachmentAssignmentListView(generic.ObjectListView):
-    queryset = models.NetBoxAttachmentAssignment.objects.prefetch_related("attachment", "object_type", "tags")
+    queryset = models.NetBoxAttachmentAssignment.objects.select_related("attachment", "object_type").prefetch_related(
+        "tags"
+    )
     table = tables.NetBoxAttachmentAssignmentTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
     filterset_form = forms.NetBoxAttachmentAssignmentFilterForm
@@ -185,7 +193,7 @@ class NetBoxAttachmentPanelListView(generic.ObjectListView):
             "tags",
             "attachment__tags",
         )
-        .annotate(attachment_link_count=models.Count("attachment__attachment_assignments", distinct=True))
+        .annotate(attachment_link_count=Count("attachment__attachment_assignments", distinct=True))
     )
     table = tables.NetBoxAttachmentForObjectTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet

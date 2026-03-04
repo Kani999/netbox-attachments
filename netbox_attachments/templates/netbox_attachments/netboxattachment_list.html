@@ -1,0 +1,20 @@
+{% extends 'generic/object_list.html' %}
+
+{% block head %}
+<style>
+/* Use rgba with --tblr-danger-rgb (214,57,57 in both modes) so a single rule
+   handles light and dark mode — semi-transparency blends naturally against any
+   table background without needing [data-bs-theme=dark] overrides. */
+.table-danger {
+    --tblr-table-bg:            rgba(var(--tblr-danger-rgb), 0.13);
+    --tblr-table-border-color:  rgba(var(--tblr-danger-rgb), 0.25);
+    --tblr-table-color:         inherit;
+    --tblr-table-striped-bg:    rgba(var(--tblr-danger-rgb), 0.13);
+    --tblr-table-striped-color: inherit;
+    --tblr-table-active-bg:     rgba(var(--tblr-danger-rgb), 0.22);
+    --tblr-table-active-color:  inherit;
+    --tblr-table-hover-bg:      rgba(var(--tblr-danger-rgb), 0.22);
+    --tblr-table-hover-color:   inherit;
+}
+</style>
+{% endblock %}

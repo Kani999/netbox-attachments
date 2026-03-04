@@ -70,9 +70,11 @@ OBJECT_ATTACHMENT_ACTIONS = """
 
 
 def get_missing_parent_row_class(record):
-    if not record.attachment_assignments.all():
-        return "danger"
-    return ""
+    count = getattr(record, "assignment_count", None)
+    if count is not None:
+        return "table-danger" if count == 0 else ""
+    # Fallback for views without annotation
+    return "table-danger" if not record.attachment_assignments.exists() else ""
 
 
 class NetBoxAttachmentTable(NetBoxTable):
