@@ -167,8 +167,9 @@ class NetBoxAttachmentAssignmentView(generic.ObjectView):
 
 @register_model_view(models.NetBoxAttachmentAssignment, name="list", path="", detail=False)
 class NetBoxAttachmentAssignmentListView(generic.ObjectListView):
-    queryset = models.NetBoxAttachmentAssignment.objects.select_related("attachment", "object_type").prefetch_related(
-        "tags"
+    queryset = (
+        models.NetBoxAttachmentAssignment.objects.select_related("attachment", "object_type")
+        .prefetch_related("tags")
     )
     table = tables.NetBoxAttachmentAssignmentTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
