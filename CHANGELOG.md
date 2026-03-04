@@ -52,6 +52,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
+- `utils.py`: `validate_object_type()` no longer raises `NameError` when `netbox_custom_objects` is not installed; the `except` tuple now uses `ObjectDoesNotExist` (imported at module level) instead of `CustomObjectType.DoesNotExist`, which was unresolvable after a failed import.
+- `tables.py`: `get_missing_parent_row_class()` fallback path now emits a `logger.warning()` so unannotated queries are visible in server logs rather than silently issuing extra DB queries.
 - `has_assignments` and `has_broken_assignments` filter fields changed from `forms.BooleanField` (with a `Select` widget) to `forms.ChoiceField`. Django's `BooleanField.has_changed()` coerces both `None` and `"false"` to Python `False`, so the field was never considered changed and the filter chip for "Has Assignments: No" / "Has Broken Assignments: No" never appeared. `ChoiceField` compares raw strings (`"" != "false"`), so the chip now renders correctly.
 
 ### Security

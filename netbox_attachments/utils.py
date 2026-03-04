@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 
 
 def _get_plugin_settings():
@@ -129,7 +129,7 @@ def validate_object_type(model):
 
                 cot = CustomObjectType.objects.get(id=model.custom_object_type_id)
                 model_identifier = f"{model._meta.app_label}.{cot.name}"
-            except (ImportError, AttributeError, CustomObjectType.DoesNotExist):
+            except (ImportError, AttributeError, ObjectDoesNotExist):
                 return False
         else:
             model_identifier = f"{model._meta.app_label}.{model._meta.model_name}"

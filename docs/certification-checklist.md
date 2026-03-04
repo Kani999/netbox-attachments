@@ -24,8 +24,7 @@ This file maps certification requirements to evidence in this repository and ide
   - Evidence: [CHANGELOG.md](../CHANGELOG.md), [docs/release-process.md](release-process.md)
 
 - [x] Contribution and support pathways are documented
-  - Evidence: [CONTRIBUTING.md](../CONTRIBUTING.md), README Support section
-
+  - Evidence: [CONTRIBUTING.md](../CONTRIBUTING.md), [README.md](../README.md)
 - [x] Automated test/build workflow exists
   - Evidence: [ci.yml](../.github/workflows/ci.yml)
 

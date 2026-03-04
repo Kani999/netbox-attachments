@@ -1,7 +1,11 @@
+import logging
+
 import django_tables2 as tables
 from netbox.tables import NetBoxTable, columns
 
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
+
+logger = logging.getLogger(__name__)
 
 FILE_SIZE = "{{ record.size|filesizeformat }}"
 DOWNLOAD_BUTTON = """
@@ -74,6 +78,9 @@ def get_missing_parent_row_class(record):
     if count is not None:
         return "table-danger" if count == 0 else ""
     # Fallback for views without annotation
+    logger.warning(
+        "assignment_count annotation missing for %r; falling back to exists() query", record
+    )
     return "table-danger" if not record.attachment_assignments.exists() else ""
 
 
