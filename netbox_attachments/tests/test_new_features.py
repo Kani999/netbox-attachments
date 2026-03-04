@@ -324,9 +324,10 @@ def test_object_attachment_for_object_table_tags_in_default_columns():
 
 
 def test_views_py_assignment_list_prefetches_tags():
-    """NetBoxAttachmentAssignmentListView queryset must prefetch 'tags' for badge rendering."""
+    """NetBoxAttachmentAssignmentListView queryset must select_related FKs and prefetch 'tags'."""
     source = _VIEWS_PY.read_text()
-    assert 'prefetch_related("attachment", "object_type", "tags")' in source
+    assert 'select_related("attachment", "object_type")' in source
+    assert '.prefetch_related("tags")' in source
 
 
 def test_views_py_panel_list_prefetches_tags():
