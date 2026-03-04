@@ -42,7 +42,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - `OSError` when reading file size on save is caught; `size` field stores `null` instead of raising.
 - `CustomObjectType` DB lookup in `validate_object_type` deferred to avoid startup `RuntimeWarning`.
 - Exception chaining suppressed in serializer `validate()` for cleaner error tracebacks.
-- Bulk-view `prefetch_related` traverses `attachment_assignments__object_type` to avoid N+1 queries on the "Assigned To" column.
+- Attachment list, bulk-edit, and bulk-delete querysets now annotate `attachment_link_count` via `Count("attachment__attachment_assignments", distinct=True)` so assignment-count-based row highlighting works in all list contexts without extra queries; replaces the previous `prefetch_related` approach that issued a separate round-trip and returned full rows only to count them.
 - `__init__.py`: `except ImportError` narrowed to `except ModuleNotFoundError` for the `PluginConfig` fallback.
 - `utils.py`: `_get_plugin_settings()` also catches `ImproperlyConfigured` so the helper is safe to call before Django is fully configured.
 - `NetBoxAttachmentLinkView`: "Save and Add Another" now correctly detects flow direction and forwards only the relevant GET params, avoiding a `ValueError` when `object_type`/`object_id` were absent.
@@ -54,6 +54,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 - `utils.py`: `validate_object_type()` no longer raises `NameError` when `netbox_custom_objects` is not installed; the `except` tuple now uses `ObjectDoesNotExist` (imported at module level) instead of `CustomObjectType.DoesNotExist`, which was unresolvable after a failed import.
 - `tables.py`: `get_missing_parent_row_class()` fallback path now emits a `logger.warning()` so unannotated queries are visible in server logs rather than silently issuing extra DB queries.
+- `NetBoxAttachmentLinkForm`: object-type picker now filters via `get_enabled_object_type_queryset()` instead of a bare `ObjectType.objects.get()`, so only plugin-configured types are selectable after an HTMX reload.
+- `NetBoxAttachmentLinkForm`: editing an existing assignment no longer raises a false "duplicate assignment" validation error; `self.instance.pk` is now excluded from the uniqueness check.
 - `has_assignments` and `has_broken_assignments` filter fields changed from `forms.BooleanField` (with a `Select` widget) to `forms.ChoiceField`. Django's `BooleanField.has_changed()` coerces both `None` and `"false"` to Python `False`, so the field was never considered changed and the filter chip for "Has Assignments: No" / "Has Broken Assignments: No" never appeared. `ChoiceField` compares raw strings (`"" != "false"`), so the chip now renders correctly.
 
 ### Security
