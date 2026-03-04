@@ -209,27 +209,23 @@ class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
             api_url="/api/core/object-types/",
         ),
     )
-    has_assignments = forms.BooleanField(
+    has_assignments = forms.ChoiceField(
         required=False,
         label=_("Has Assignments"),
-        widget=forms.Select(
-            choices=[
-                ("", "---------"),
-                ("true", _("Yes")),
-                ("false", _("No")),
-            ]
-        ),
+        choices=[
+            ("", "---------"),
+            ("true", _("Yes")),
+            ("false", _("No")),
+        ],
     )
-    has_broken_assignments = forms.BooleanField(
+    has_broken_assignments = forms.ChoiceField(
         required=False,
         label=_("Has Broken Assignments"),
-        widget=forms.Select(
-            choices=[
-                ("", "---------"),
-                ("true", _("Yes")),
-                ("false", _("No")),
-            ]
-        ),
+        choices=[
+            ("", "---------"),
+            ("true", _("Yes")),
+            ("false", _("No")),
+        ],
     )
     tag = TagFilterField(model)
 

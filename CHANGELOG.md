@@ -50,6 +50,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - `NetBoxAttachmentForObjectTable`: `TagColumn.url_name` corrected to `netboxattachmentassignment_list` (was `netboxattachment_list`).
 - Assignment querysets in `AttachmentTabView.get_children()`, `NetBoxAttachmentAssignmentListView`, and `NetBoxAttachmentPanelListView` now `prefetch_related("tags")` so assignment tag badges render without N+1 queries.
 
+### Fixed
+
+- `has_assignments` and `has_broken_assignments` filter fields changed from `forms.BooleanField` (with a `Select` widget) to `forms.ChoiceField`. Django's `BooleanField.has_changed()` coerces both `None` and `"false"` to Python `False`, so the field was never considered changed and the filter chip for "Has Assignments: No" / "Has Broken Assignments: No" never appeared. `ChoiceField` compares raw strings (`"" != "false"`), so the chip now renders correctly.
+
 ### Security
 
 - `return_url` redirect targets validated with `url_has_allowed_host_and_scheme` before redirecting.
