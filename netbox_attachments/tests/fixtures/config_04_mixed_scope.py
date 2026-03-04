@@ -8,17 +8,17 @@
 # - Demonstrates mixed filtering capability
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'model',
-        'scope_filter': [
-            'dcim',                      # Entire app
-            'ipam.ipaddress',            # Specific model
-            'virtualization.cluster',    # Specific model
+    "netbox_attachments": {
+        "applied_scope": "model",
+        "scope_filter": [
+            "dcim",  # Entire app
+            "ipam.ipaddress",  # Specific model
+            "virtualization.cluster",  # Specific model
         ],
     }
 }

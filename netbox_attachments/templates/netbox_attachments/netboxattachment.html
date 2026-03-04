@@ -1,56 +1,80 @@
 {% extends "generic/object.html" %}
 {% load render_table from django_tables2 %}
 {% load plugins %}
+{% load i18n %}
 {% block content %}
-  <div class="row mb-3">
-    <div class="col col-md-6">
-      <div class="card">
-        <h5 class="card-header">Attachments</h5>
-        <div class="card-body">
-          <table class="table table-hover attr-table">
-            <tr>
-              <th scope="row">Name</th>
-              <td>{{ object }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Description</th>
-              <td>{{ object.description }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Filename</th>
-              <td>
-                <a href="{{ object.file.url }}" target="_blank">{{ object.filename }}</a>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">Size</th>
-              <td>{{ object.size|filesizeformat }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Parent</th>
-              <td>{{ object.parent|linkify }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Created</th>
-              <td>{{ object.created }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Updated</th>
-              <td>{{ object.last_updated }}</td>
-            </tr>
-          </table>
+    <div class="row mb-3">
+        <div class="col col-md-6">
+            <div class="card">
+                <h5 class="card-header">Attachment</h5>
+                <div class="card-body">
+                    <table class="table table-hover attr-table">
+                        <tr>
+                            <th scope="row">Name</th>
+                            <td>{{ object.name }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Description</th>
+                            <td>{{ object.description }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Filename</th>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {{ object.filename }}
+                                    <a href="{{ object.file.url }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn btn-sm btn-primary download-attachment"
+                                       title="Download">
+                                        <i class="mdi mdi-download"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Size</th>
+                            <td>{{ object.size|filesizeformat }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Created</th>
+                            <td>{{ object.created }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Updated</th>
+                            <td>{{ object.last_updated }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            {% include "inc/panels/custom_fields.html" %}
+            {% plugin_left_page object %}
         </div>
-      </div>
-      {% include "inc/panels/custom_fields.html" %}
-      {% plugin_left_page object %}
+        <div class="col col-md-6">
+            {% include "inc/panels/tags.html" %}
+            {% include "inc/panels/comments.html" %}
+            {% plugin_right_page object %}
+        </div>
     </div>
-    <div class="col col-md-6">
-      {% include "inc/panels/tags.html" %}
-      {% include "inc/panels/comments.html" %}
-      {% plugin_right_page object %}
+    <div class="row mb-3">
+        <div class="col col-md-12">
+            <div class="card">
+                <h5 class="card-header">
+                    {% trans "Assigned To" %}
+                    <div class="card-actions">
+                        {% if perms.netbox_attachments.add_netboxattachmentassignment %}
+                            <a href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?attachment={{ object.pk }}&return_url={{ request.path|urlencode }}"
+                               class="btn btn-ghost-primary btn-sm">
+                                <i class="mdi mdi-link-variant" aria-hidden="true"></i> {% trans "Assign to Object" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </h5>
+                <div class="card-body">{% render_table assignments_table %}</div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="col col-md-12">{% plugin_full_width_page object %}</div>
-  </div>
+    <div class="row">
+        <div class="col col-md-12">{% plugin_full_width_page object %}</div>
+    </div>
 {% endblock content %}

@@ -1,4 +1,10 @@
-from netbox.plugins import PluginConfig
+try:
+    from netbox.plugins import PluginConfig
+except ModuleNotFoundError:
+
+    class PluginConfig:  # type: ignore[no-redef]
+        pass
+
 
 from netbox_attachments.version import __version__
 

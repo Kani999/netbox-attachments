@@ -2,21 +2,5 @@
 {% load helpers %}
 {% load form_helpers %}
 {% block form %}
-    <div class="field-group mb-5">
-        <div class="row mb-3">
-            {% if object.parent %}
-                <label class="col-sm-3 col-form-label text-lg-end required">{{ object.parent|meta:"verbose_name"|bettertitle }}</label>
-                <div class="col-sm-9">
-                    <div class="form-control-plaintext">{{ object.parent|linkify }}</div>
-                </div>
-            {% else %}
-                <!-- Fallback if parent is missing. It should not happend anymore -->
-                <label class="col-sm-3 col-form-label text-lg-end required">Parent</label>
-                <div class="col-sm-9">
-                    <div class="form-control-plaintext">Missing parent object</div>
-                </div>
-            {% endif %}
-        </div>
-        {% render_form form %}
-    </div>
+    <div class="field-group mb-5">{% render_form form %}</div>
 {% endblock form %}

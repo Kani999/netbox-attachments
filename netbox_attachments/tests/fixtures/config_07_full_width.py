@@ -7,17 +7,17 @@
 # - Best for models where attachments are the primary content
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'app',
-        'scope_filter': [
-            'dcim',
-            'ipam',
+    "netbox_attachments": {
+        "applied_scope": "app",
+        "scope_filter": [
+            "dcim",
+            "ipam",
         ],
-        'display_default': 'full_width_page',
+        "display_default": "full_width_page",
     }
 }

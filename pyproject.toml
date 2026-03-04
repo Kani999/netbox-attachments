@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=77.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netbox-attachments"
+dynamic = ["version"]
+description = "Netbox plugin to manage attachments for any model"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Jan Krupa"},
+]
+keywords = ["netbox", "netbox-plugin"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Framework :: Django",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "django>=5.0,<6.0",
+]
+
+[project.optional-dependencies]
+test = ["django>=5.0", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/Kani999/netbox-attachments"
+Source = "https://github.com/Kani999/netbox-attachments"
+Issues = "https://github.com/Kani999/netbox-attachments/issues"
+Documentation = "https://github.com/Kani999/netbox-attachments/blob/main/docs/index.md"
+Changelog = "https://github.com/Kani999/netbox-attachments/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = {attr = "netbox_attachments.version.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["netbox_attachments*"]
+
+[tool.setuptools.package-data]
+netbox_attachments = ["**/*", "templates/**"]
+
+[tool.setuptools.exclude-package-data]
+netbox_attachments = ["**/__pycache__/*", "**/*.py[cod]"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"netbox_attachments/tables.py" = ["E501"]

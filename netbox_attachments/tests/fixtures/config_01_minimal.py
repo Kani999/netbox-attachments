@@ -8,12 +8,12 @@
 # - create_add_button: True (default)
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
+    "netbox_attachments": {
         # All settings use defaults - no explicit configuration
     }
 }

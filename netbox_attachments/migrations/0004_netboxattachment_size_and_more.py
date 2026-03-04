@@ -5,20 +5,19 @@ import utilities.json
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('netbox_attachments', '0003_alter_netboxattachment_name'),
+        ("netbox_attachments", "0003_alter_netboxattachment_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='netboxattachment',
-            name='size',
+            model_name="netboxattachment",
+            name="size",
             field=models.PositiveBigIntegerField(blank=True, editable=False, null=True),
         ),
         migrations.AlterField(
-            model_name='netboxattachment',
-            name='custom_field_data',
+            model_name="netboxattachment",
+            name="custom_field_data",
             field=models.JSONField(blank=True, default=dict, encoder=utilities.json.CustomFieldJSONEncoder),
         ),
     ]

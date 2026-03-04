@@ -5,17 +5,23 @@
     <div class="col col-md-12">
         <div class="card">
             <h5 class="card-header">
-                {% trans "Attachments" %}
+                {% trans "Attachment Assignments" %}
                 <div class="card-actions">
                     {% if perms.netbox_attachments.add_netboxattachment %}
-                        <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path }}"
+                        <a href="{% url 'plugins:netbox_attachments:netboxattachment_add' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path|urlencode }}"
                            class="btn btn-ghost-primary btn-sm">
                             <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add Attachment" %}
                         </a>
                     {% endif %}
+                    {% if perms.netbox_attachments.add_netboxattachmentassignment %}
+                        <a href="{% url 'plugins:netbox_attachments:netboxattachment_link' %}?object_type={{ object|content_type_id }}&object_id={{ object.pk }}&return_url={{ request.path|urlencode }}"
+                           class="btn btn-ghost-secondary btn-sm">
+                            <i class="mdi mdi-link-variant" aria-hidden="true"></i> {% trans "Link Existing" %}
+                        </a>
+                    {% endif %}
                 </div>
             </h5>
-            {% htmx_table 'plugins:netbox_attachments:netboxattachment_list' object_type_id=object|content_type_id object_id=object.pk %}
+            {% htmx_table 'plugins:netbox_attachments:netboxattachment_panel_list' object_type_id=object|content_type_id object_id=object.pk %}
         </div>
     </div>
 {% endif %}

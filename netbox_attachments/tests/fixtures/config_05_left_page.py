@@ -7,17 +7,17 @@
 # - Useful for models with many tabs or lightweight detail pages
 
 PLUGINS = [
-    'netbox_attachments',
-    'netbox_custom_objects',
+    "netbox_attachments",
+    "netbox_custom_objects",
 ]
 
 PLUGINS_CONFIG = {
-    'netbox_attachments': {
-        'applied_scope': 'app',
-        'scope_filter': [
-            'dcim',
-            'ipam',
+    "netbox_attachments": {
+        "applied_scope": "app",
+        "scope_filter": [
+            "dcim",
+            "ipam",
         ],
-        'display_default': 'left_page',
+        "display_default": "left_page",
     }
 }
