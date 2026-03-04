@@ -15,7 +15,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - "Assignments" entry added to the plugin sidebar menu under Attachments.
 - `NetBoxAttachmentAssignment` junction model: one attachment can now be linked to multiple objects simultaneously.
 - New "Assign" / "Unlink" UI workflow: link form with HTMX-driven object picker (`NetBoxAttachmentLinkView`) and unlink confirmation page (`NetBoxAttachmentAssignmentDeleteView`).
-- New API endpoint `/api/plugins/netbox-attachments/netbox-attachment-assignments/` with full CRUD support.
+- New API endpoint `/api/plugins/netbox-attachments/netbox-attachment-assignments/` with full CRUD support; uses `ObjectTypeField` to correctly resolve `"app_label.model"` strings to NetBox `ObjectType` proxy instances.
 - New filter fields: `has_assignments`, `has_broken_assignments`, `object_type_id`, `object_id` (routed through assignment relation).
 - Attachment list table: "Assigned To" column shows up to 3 linked objects with a "+N more" badge; rows with no assignments highlighted with the `danger` CSS class.
 - Migrations 0008–0011: create assignment table, data-migrate existing FK links, remove deprecated `object_type`/`object_id` fields from `NetBoxAttachment`, add composite DB index on `(object_type_id, object_id)`.
