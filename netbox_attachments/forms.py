@@ -5,6 +5,9 @@ from netbox.forms import (
     NetBoxModelBulkEditForm,
     NetBoxModelFilterSetForm,
     NetBoxModelForm,
+    PrimaryModelBulkEditForm,
+    PrimaryModelFilterSetForm,
+    PrimaryModelForm,
 )
 from utilities.forms.fields import (
     CommentField,
@@ -22,7 +25,7 @@ from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignme
 from netbox_attachments.utils import get_enabled_object_type_queryset
 
 
-class NetBoxAttachmentForm(NetBoxModelForm):
+class NetBoxAttachmentForm(PrimaryModelForm):
     comments = CommentField(label="Comment")
 
     class Meta:
@@ -31,6 +34,8 @@ class NetBoxAttachmentForm(NetBoxModelForm):
             "name",
             "description",
             "file",
+            "owner_group",
+            "owner",
             "comments",
             "tags",
         ]
@@ -200,7 +205,7 @@ class NetBoxAttachmentAssignmentForm(NetBoxModelForm):
         fields = ["tags"]
 
 
-class NetBoxAttachmentFilterForm(NetBoxModelFilterSetForm):
+class NetBoxAttachmentFilterForm(PrimaryModelFilterSetForm):
     model = NetBoxAttachment
     name = forms.CharField(required=False)
     description = forms.CharField(required=False)
@@ -255,7 +260,7 @@ class NetBoxAttachmentAssignmentFilterForm(NetBoxModelFilterSetForm):
     tag = TagFilterField(model)
 
 
-class NetBoxAttachmentBulkEditForm(NetBoxModelBulkEditForm):
+class NetBoxAttachmentBulkEditForm(PrimaryModelBulkEditForm):
     name = forms.CharField(max_length=NetBoxAttachment._meta.get_field("name").max_length, required=False)
     description = forms.CharField(
         widget=forms.Textarea,
@@ -264,7 +269,7 @@ class NetBoxAttachmentBulkEditForm(NetBoxModelBulkEditForm):
     )
 
     model = NetBoxAttachment
-    nullable_fields = ("name", "description")
+    nullable_fields = ("name", "description", "owner")
 
 
 class NetBoxAttachmentAssignmentBulkEditForm(NetBoxModelBulkEditForm):

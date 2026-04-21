@@ -7,8 +7,7 @@ from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from netbox.models import NetBoxModel
+from netbox.models import NetBoxModel, PrimaryModel
 from utilities.querysets import RestrictedQuerySet
 
 from netbox_attachments.utils import attachment_upload
@@ -16,7 +15,7 @@ from netbox_attachments.utils import attachment_upload
 logger = logging.getLogger(__name__)
 
 
-class NetBoxAttachment(NetBoxModel):
+class NetBoxAttachment(PrimaryModel):
     """
     An uploaded attachment which may be linked to one or more objects.
     """
@@ -31,10 +30,6 @@ class NetBoxAttachment(NetBoxModel):
         help_text="Size of the file in bytes",
     )
     name = models.CharField(max_length=254, blank=True)
-    description = models.CharField(verbose_name=_("description"), max_length=200, blank=True)
-    comments = models.TextField(blank=True)
-
-    objects = RestrictedQuerySet.as_manager()
 
     clone_fields = ()
 
