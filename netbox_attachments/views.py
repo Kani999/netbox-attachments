@@ -11,7 +11,10 @@ from netbox_attachments.utils import get_enabled_object_type_queryset
 
 @register_model_view(models.NetBoxAttachment, name="", detail=True)
 class NetBoxAttachmentView(generic.ObjectView):
-    queryset = models.NetBoxAttachment.objects.prefetch_related(
+    queryset = models.NetBoxAttachment.objects.select_related(
+        "owner",
+        "owner__group",
+    ).prefetch_related(
         "attachment_assignments",
         "attachment_assignments__object_type",
     )
@@ -36,10 +39,17 @@ class NetBoxAttachmentListView(generic.ObjectListView):
         "bulk_edit": {"change"},
         "bulk_delete": {"delete"},
     }
-    queryset = models.NetBoxAttachment.objects.prefetch_related(
-        "attachment_assignments",
-        "attachment_assignments__object_type",
-    ).annotate(assignment_count=Count("attachment_assignments", distinct=True))
+    queryset = (
+        models.NetBoxAttachment.objects.select_related(
+            "owner",
+            "owner__group",
+        )
+        .prefetch_related(
+            "attachment_assignments",
+            "attachment_assignments__object_type",
+        )
+        .annotate(assignment_count=Count("attachment_assignments", distinct=True))
+    )
     table = tables.NetBoxAttachmentTable
     filterset = filtersets.NetBoxAttachmentFilterSet
     filterset_form = forms.NetBoxAttachmentFilterForm
