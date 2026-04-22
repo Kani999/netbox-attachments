@@ -91,6 +91,8 @@ class NetBoxAttachmentTable(NetBoxTable):
         verbose_name="Assigned To",
         orderable=False,
     )
+    owner = tables.Column(verbose_name="Owner", linkify=True)
+    owner_group = tables.Column(accessor="owner__group", verbose_name="Owner Group", linkify=True)
     tags = columns.TagColumn()
     file = tables.FileColumn()
     size = tables.TemplateColumn(template_code=FILE_SIZE)
@@ -104,6 +106,8 @@ class NetBoxAttachmentTable(NetBoxTable):
             "name",
             "description",
             "parent",
+            "owner",
+            "owner_group",
             "file",
             "size",
             "comments",

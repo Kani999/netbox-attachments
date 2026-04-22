@@ -1,7 +1,7 @@
 from core.models.object_types import ObjectType
 from django.core.exceptions import ObjectDoesNotExist
 from netbox.api.fields import ContentTypeField
-from netbox.api.serializers import NetBoxModelSerializer
+from netbox.api.serializers import NetBoxModelSerializer, PrimaryModelSerializer
 from rest_framework import serializers
 from utilities.api import get_serializer_for_model
 
@@ -84,7 +84,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
         return serializer(parent, nested=True, context=self.context).data
 
 
-class NetBoxAttachmentSerializer(NetBoxModelSerializer):
+class NetBoxAttachmentSerializer(PrimaryModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="plugins-api:netbox_attachments-api:netboxattachment-detail")
     assignments = NetBoxAttachmentAssignmentSerializer(
         source="attachment_assignments",
@@ -102,6 +102,7 @@ class NetBoxAttachmentSerializer(NetBoxModelSerializer):
             "description",
             "file",
             "size",
+            "owner",
             "assignments",
             "created",
             "last_updated",

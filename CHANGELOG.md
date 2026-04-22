@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.1.0] - 2026-04-21
+
+### Added
+
+- NetBox 4.5 Resource Ownership on `NetBoxAttachment`: new optional `owner` field (FK to `users.Owner`, `on_delete=PROTECT`), surfaced in the edit form, bulk-edit form, filter form, DRF filterset, and API serializer. Owner appears in the generic page subtitle via `generic/object.html`; `owner` and `owner_group` are available as opt-in columns on the attachment list table. The attachment list / API endpoint accepts `owner_id`, `owner_group_id`, `owner`, and `owner_group` filters (issue #101).
+
+### Changed
+
+- `NetBoxAttachment` model rebased from `NetBoxModel` onto `PrimaryModel`; the plugin's manually declared `description` and `comments` fields were removed in favor of the inherited definitions (identical signatures).
+- Serializer, filterset, and forms for `NetBoxAttachment` re-parented to the matching `PrimaryModel*` base classes.
+- Migration `0013_alter_netboxattachmentassignment_custom_field_data` picks up an upstream NetBox change that added `encoder=CustomFieldJSONEncoder` to `CustomFieldsMixin.custom_field_data`; the plugin's existing migration graph was out of sync with that.
+
 ## [11.0.1] - 2026-03-04
 
 ### Changed

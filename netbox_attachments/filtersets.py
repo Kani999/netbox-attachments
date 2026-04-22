@@ -3,13 +3,14 @@ from core.models.object_types import ObjectType
 from django.db.models import Q
 from extras.filters import TagFilter
 from netbox.filtersets import NetBoxModelFilterSet
+from users.filterset_mixins import OwnerFilterMixin
 from utilities.filtersets import register_filterset
 
 from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignment
 
 
 @register_filterset
-class NetBoxAttachmentFilterSet(NetBoxModelFilterSet):
+class NetBoxAttachmentFilterSet(OwnerFilterMixin, NetBoxModelFilterSet):
     q = django_filters.CharFilter(method="search", label="Search")
     created = django_filters.DateTimeFilter()
     name = django_filters.CharFilter(lookup_expr="icontains")
