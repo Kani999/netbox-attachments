@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.2.0b1] - 2026-05-07
+
+### Changed
+
+- Bump `max_version` from `4.5.99` to `4.6.99` to allow installing on NetBox 4.6.x (issue #103). Beta release for testing 4.6 compatibility.
+
 ## [11.1.0] - 2026-04-21
 
 ### Added
