@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- NetBox `4.5.x`
+- NetBox `4.5.x` – `4.6.x`
 - Python `3.12` to `<3.15`
 
 ## 1. Install the package
