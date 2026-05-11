@@ -4,14 +4,14 @@
 
 Current maintained line:
 
-- NetBox: `4.5.x`
+- NetBox: `4.5.x` – `4.6.x`
 - Plugin: `11.x`
 - Python: `3.12`, `3.13`, `3.14`
 
 Runtime compatibility is enforced in plugin config:
 
 - `min_version = "4.5.0"`
-- `max_version = "4.5.99"`
+- `max_version = "4.6.99"`
 
 Source: `netbox_attachments/__init__.py`
 

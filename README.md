@@ -17,7 +17,7 @@
 
 Supported now:
 
-- NetBox: `4.5.x`
+- NetBox: `4.5.x` – `4.6.x`
 - Plugin: `11.x`
 - Python: `3.12`, `3.13`, `3.14`
 
