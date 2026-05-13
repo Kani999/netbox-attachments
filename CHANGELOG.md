@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.2.1] - 2026-05-13
+
+### Changed
+
+- Relax Django constraint from `django>=5.0,<6.0` to `django>=5.0,<7.0` in `pyproject.toml`. NetBox 4.6 ships Django 6.0, so the previous cap forced a Django downgrade when installing on NetBox 4.6 (issue #105).
+
 ## [11.2.0] - 2026-05-11
 
 ### Changed
