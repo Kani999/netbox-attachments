@@ -24,11 +24,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "django>=5.0,<6.0",
+    "django>=5.0,<7.0",
 ]
 
 [project.optional-dependencies]
-test = ["django>=5.0", "pytest"]
+test = ["django>=5.0,<7.0", "pytest"]
 
 [project.urls]
 Homepage = "https://github.com/Kani999/netbox-attachments"
