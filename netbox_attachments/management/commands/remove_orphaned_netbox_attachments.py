@@ -235,7 +235,12 @@ class Command(BaseCommand):
         disk_files = []
         for path in attachment_dir.rglob("*"):
             if path.is_file():
-                disk_files.append((str(path.resolve()), str(path.relative_to(media_root)), path.stat().st_mtime))
+                try:
+                    disk_files.append((str(path.resolve()), str(path.relative_to(media_root)), path.stat().st_mtime))
+                except OSError:
+                    # File vanished (or became unreadable) between the directory walk
+                    # and stat(); skip it -- a file we cannot stat is not a deletable orphan.
+                    continue
 
         orphaned = select_orphaned_files(
             disk_files,
@@ -281,7 +286,12 @@ class Command(BaseCommand):
             self.info(f"\nOrphaned files on disk (no DB record): {len(orphaned_files)}")
             self.debug(f"  (scanned {attachment_dir})")
             for abspath in orphaned_files:
-                size = Path(abspath).stat().st_size
+                try:
+                    size = Path(abspath).stat().st_size
+                except OSError:
+                    # File removed between scan and report; nothing left to reclaim.
+                    self.debug(f"  {Path(abspath).name}  (vanished before report)")
+                    continue
                 total_size += size
                 self.debug(f"  {Path(abspath).name}  ({size / 1024:.1f} KB)")
             if orphaned_files:
