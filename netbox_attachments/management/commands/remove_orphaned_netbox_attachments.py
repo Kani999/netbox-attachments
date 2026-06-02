@@ -28,11 +28,20 @@ Examples::
 
     # Actually delete, without the interactive prompt
     python manage.py remove_orphaned_netbox_attachments --delete --no-input
+
+    # Also list attachments tied to disabled/uninstalled plugins (report-only)
+    python manage.py remove_orphaned_netbox_attachments --list-broken -v2
+
+Safety with disabled/uninstalled plugins: this command keys off database rows, not
+whether a linked object's model can be resolved. Disabling a plugin leaves the
+attachment, its assignment row, and the file in place, so such attachments are never
+treated as orphaned. Use ``--list-broken`` to surface them for manual review.
 """
 
 import time
 from pathlib import Path
 
+from core.models.object_types import ObjectType
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count
@@ -98,6 +107,15 @@ class Command(BaseCommand):
             metavar="MASK",
             help="Exclude on-disk files by *-style mask (relative to MEDIA_ROOT). Repeatable.",
         )
+        parser.add_argument(
+            "--list-broken",
+            action="store_true",
+            default=False,
+            help=(
+                "Report-only: also list attachments whose assignment points to an object type "
+                "from a disabled/uninstalled plugin (unresolvable model). These are never deleted."
+            ),
+        )
 
     # -- output helpers -------------------------------------------------------
 
@@ -146,6 +164,11 @@ class Command(BaseCommand):
             orphaned_records_count=orphaned_records_count,
         )
 
+        # Report-only: attachments tied to disabled/uninstalled plugins. These are
+        # deliberately never deleted (see _delete / docs), only surfaced for review.
+        if options["list_broken"]:
+            self._report_broken()
+
         total = (len(orphaned_files) if do_files else 0) + orphaned_records_count
         if total == 0:
             self.info("\nNothing to clean up.")
@@ -166,6 +189,34 @@ class Command(BaseCommand):
         self._delete(do_files, do_records, orphaned_files, orphaned_records_qs)
 
     # -- steps ----------------------------------------------------------------
+
+    def _report_broken(self):
+        """
+        List attachments whose assignment points to an object type from a
+        disabled/uninstalled plugin (its model can no longer be resolved).
+
+        Uses the same definition of "broken" as the ``has_broken_assignments``
+        filter (``ObjectType.model_class() is None``). Report-only -- these
+        attachments are never deleted by this command.
+        """
+        broken_ids = [
+            ot.id for ot in ObjectType.objects.only("id", "app_label", "model").iterator() if ot.model_class() is None
+        ]
+        assignments = (
+            NetBoxAttachmentAssignment.objects.filter(object_type_id__in=broken_ids)
+            .select_related("attachment", "object_type")
+            .order_by("object_type__app_label", "object_type__model", "object_id")
+        )
+
+        self.info(f"\nAttachments on disabled/uninstalled plugins (broken assignments): {assignments.count()}")
+        self.info("  (report-only -- these are never deleted)")
+        for assignment in assignments.iterator():
+            ot = assignment.object_type
+            attachment = assignment.attachment
+            self.debug(
+                f"  {ot.app_label}.{ot.model} #{assignment.object_id}"
+                f"  ->  #{attachment.pk} {attachment.name or attachment.filename}"
+            )
 
     def _scan_files(self, media_root, attachment_dir, min_age, exclude):
         if not attachment_dir.exists():
