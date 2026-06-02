@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.2.2] - 2026-06-02
+
+### Added
+
+- Management command `fix_attachment_object_types` to back-fill `core_objecttype` rows for every object type referenced by existing attachment data. This unblocks the foreign-key violation in migration `0007_alter_netboxattachment_object_type` that can occur when upgrading to NetBox 4.6 with existing attachments (issue #107), including object types whose model is no longer installed. The command is idempotent, supports `--dry-run`, and is a no-op on NetBox < 4.6. See [docs/installation.md](docs/installation.md#upgrading-to-netbox-46-issue-107).
+
 ## [11.2.1] - 2026-05-13
 
 ### Changed

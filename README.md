@@ -23,6 +23,8 @@ Supported now:
 
 Compatibility details and legacy version notes are documented in [docs/compatibility.md](docs/compatibility.md).
 
+> **Upgrading to NetBox 4.6 with existing attachments?** A foreign-key error in migration `0007` can occur because NetBox 4.6 populates `core_objecttype` via a post-migrate signal. See the [NetBox 4.6 upgrade notes](docs/installation.md#upgrading-to-netbox-46-issue-107) and the `fix_attachment_object_types` management command (issue #107).
+
 ## Installation
 
 Install from PyPI:
