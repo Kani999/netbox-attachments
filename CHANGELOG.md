@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.2.3] - 2026-06-02
+
+### Added
+
+- Management command `remove_orphaned_netbox_attachments` to report and clean up orphaned attachment data (issue #22): orphaned files on disk under `MEDIA_ROOT/netbox-attachments/` (including leftovers from renamed/overwritten attachments) and unassigned `NetBoxAttachment` records. It is a **dry-run by default**; deletion requires `--delete` and is guarded by an interactive confirmation (skippable with `--no-input`). Supports `--files-only`/`--records-only`, a `--min-age` guard that skips freshly written files, and `-e/--exclude` masks. Verbose mode (`-v2`) lists each affected file/record plus a per-object-type assignment breakdown. "Broken" attachments (record present, file missing) are reported but never deleted. Attachments tied to disabled/uninstalled plugins are never garbage-collected (the command keys off database rows, not model resolvability); `--list-broken` reports them for manual review. See [docs/usage.md](docs/usage.md#maintenance-cleaning-up-orphans).
+
 ## [11.2.2] - 2026-06-02
 
 ### Added

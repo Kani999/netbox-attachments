@@ -147,3 +147,55 @@ Attachments are independent objects and can exist without any assignments.
 
 - When a linked NetBox object (e.g. a Device) is deleted, its assignments are removed but the attachment is preserved.
 - Attachments with no assignments appear highlighted in red in the attachment list. Use the `?has_assignments=false` filter to surface them.
+
+## Maintenance: cleaning up orphans
+
+Over time two kinds of "orphan" can accumulate (see issue #22):
+
+- **Orphaned files on disk** — files under `MEDIA_ROOT/netbox-attachments/` that no `NetBoxAttachment` record references. These are left behind by failed deletes and by renaming/overwriting an attachment's file (the old file is not removed automatically).
+- **Orphaned attachment records** — `NetBoxAttachment` rows with no assignments. Since unlinking the last assignment no longer deletes the attachment, unused records (and their files) build up. They are the same records surfaced by the `?has_assignments=false` filter.
+
+The `remove_orphaned_netbox_attachments` management command reports and (optionally) removes both:
+
+```bash
+# Report only — safe to run anytime (this is the default; nothing is deleted)
+python3 manage.py remove_orphaned_netbox_attachments
+
+# Verbose report listing each orphaned file/record and the assignment breakdown
+python3 manage.py remove_orphaned_netbox_attachments -v2
+
+# Actually delete, with an interactive confirmation prompt
+python3 manage.py remove_orphaned_netbox_attachments --delete
+
+# Delete without prompting (e.g. from cron)
+python3 manage.py remove_orphaned_netbox_attachments --delete --no-input
+
+# Report-only: also list attachments tied to disabled/uninstalled plugins
+python3 manage.py remove_orphaned_netbox_attachments --list-broken -v2
+```
+
+Useful options:
+
+| Option | Description |
+|--------|-------------|
+| `--delete` | Perform deletion. Without it the command only reports (dry-run). |
+| `-n`, `--dry-run` | Force report-only mode; overrides `--delete` if both are given. |
+| `--no-input` | Skip the confirmation prompt when deleting. |
+| `--files-only` | Only act on orphaned files on disk. |
+| `--records-only` | Only act on unassigned attachment records. |
+| `--min-age SECONDS` | Skip files modified within this many seconds (default `60`). Use `0` to disable. Protects in-flight uploads. |
+| `-e`, `--exclude MASK` | Exclude on-disk files by `*`-style mask (relative to `MEDIA_ROOT`); repeatable. |
+| `--list-broken` | Report-only: also list attachments tied to a disabled/uninstalled plugin (see below). Never deletes them. |
+| `-v2` | List each affected file/record and the per-object-type assignment breakdown. |
+
+!!! warning
+    Deleting an orphaned attachment record also deletes its file from disk. Run without `--delete` first and review the report. The command reports — but never deletes — "broken" attachments (a record whose file is already missing from disk).
+
+### Safety with disabled or uninstalled plugins
+
+The command decides what to delete from **database rows**, never from whether a linked object's model can be resolved. Disabling (or uninstalling) a plugin leaves the `NetBoxAttachment` record, its `NetBoxAttachmentAssignment` row, and the file on disk all in place. As a result:
+
+- The attachment's file is still referenced by a record, so it is **never** counted as an orphaned file.
+- The attachment still has an assignment row, so it is **never** counted as an orphaned record (the assignment merely becomes "broken" — the same state surfaced by the `?has_broken_assignments=true` filter).
+
+In other words, **temporarily disabling a plugin can never cause its attachments to be garbage-collected.** This is intentional and conservative: even a *fully uninstalled* plugin's attachments are preserved rather than auto-deleted. To find such attachments — for example to clean them up deliberately — use `--list-broken`, which reports (but never deletes) every attachment whose assignment points to an object type with an unresolvable model.
