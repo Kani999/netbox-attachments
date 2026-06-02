@@ -84,6 +84,12 @@ NetBox versions older than 4.6.
 If you hit this on a plugin version that does not yet ship the command, run the equivalent directly
 in `nbshell` (`python3 manage.py nbshell`) after step 3, before the final `migrate`:
 
+> **Scope:** this snippet assumes the schema left by a failed `0007` migration — i.e. the plugin at
+> migration `0006`, where object-type references live solely in
+> `netbox_attachments_netboxattachment.object_type_id` (`content_type_id` was renamed away in `0006`,
+> and the assignment table is not created until `0008`). If your database is in any other state, use
+> the `fix_attachment_object_types` command instead, which auto-detects the source table/column.
+
 ```python
 from django.db import connection
 
