@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 
 from django.conf import settings
@@ -96,6 +97,23 @@ def custom_object_identifier(model):
     if not is_custom_object_model(model):
         return None
 
+    return _resolve_custom_object_identifier(model)
+
+
+@lru_cache(maxsize=256)
+def _resolve_custom_object_identifier(model):
+    """
+    CustomObjectType lookup, cached per generated model class.
+
+    The scope check and the display-key resolution can each need this during one page
+    render; uncached that is repeated identical queries. Caching on the class is sound
+    because netbox_custom_objects regenerates the dynamic class whenever its
+    CustomObjectType is saved (a rename means a new class object, i.e. a new cache
+    key). A queryset .update() bypasses that signal and would serve a stale name until
+    restart — the same tradeoff the CO plugin's own model cache makes. Only custom
+    object classes reach this (the public wrapper filters), so standard models never
+    churn the LRU.
+    """
     try:
         from netbox_custom_objects.models import CustomObjectType
 
