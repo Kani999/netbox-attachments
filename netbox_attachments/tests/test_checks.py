@@ -57,6 +57,31 @@ def test_mode_setting_warns_that_values_also_changed(monkeypatch):
     assert "permissive" in warnings[0].hint
 
 
+def test_check_ids_are_stable_not_positional(monkeypatch):
+    """W-ids are a published contract (SILENCED_SYSTEM_CHECKS); they must not renumber
+    when earlier table entries are absent from the user's config."""
+    monkeypatch.setattr(checks, "_get_plugin_settings", lambda: {"mode": "permissive"})
+
+    warnings = checks.check_removed_settings(None)
+
+    assert [w.id for w in warnings] == ["netbox_attachments.W003"]
+
+
+def test_message_acknowledges_configured_replacement(monkeypatch):
+    """A half-migrated config (old and new key both set) must not claim the default is in use."""
+    monkeypatch.setattr(
+        checks,
+        "_get_plugin_settings",
+        lambda: {"apps": ["dcim"], "scope_filter": ["dcim", "netbox_custom_objects"]},
+    )
+
+    warnings = checks.check_removed_settings(None)
+
+    assert len(warnings) == 1
+    assert "Your configured 'scope_filter' is in effect" in warnings[0].msg
+    assert "default" not in warnings[0].msg
+
+
 def test_each_removed_setting_warns_once_with_a_unique_id(monkeypatch):
     monkeypatch.setattr(
         checks,
