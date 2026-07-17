@@ -192,7 +192,7 @@ def get_enabled_object_type_queryset():
 
     # Standard models
     for model in apps.get_models():
-        key = f"{model._meta.app_label}.{model._meta.model_name}"
+        key = model._meta.label_lower
         if key in seen:
             continue
         seen.add(key)
@@ -203,7 +203,7 @@ def get_enabled_object_type_queryset():
     try:
         custom_app = apps.get_app_config("netbox_custom_objects")
         for model in custom_app.get_models():
-            key = f"{model._meta.app_label}.{model._meta.model_name}"
+            key = model._meta.label_lower
             if key in seen:
                 continue
             seen.add(key)

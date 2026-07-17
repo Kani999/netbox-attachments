@@ -1,8 +1,7 @@
 """Unit tests for template display decision helpers."""
 
-from types import SimpleNamespace
-
 from netbox_attachments import template_content
+from netbox_attachments.tests.conftest import fake_model
 
 
 class FakeExtension:
@@ -22,19 +21,7 @@ class FakeExtension:
 
 def make_object(app_label="netbox_custom_objects", model_name="table3model"):
     """An instance whose type() carries _meta, since the panel inspects the class."""
-    model = type(
-        "FakeModel",
-        (),
-        {
-            "_meta": SimpleNamespace(
-                app_label=app_label,
-                model_name=model_name,
-                label_lower=f"{app_label}.{model_name}",
-                abstract=False,
-            )
-        },
-    )
-    return model()
+    return fake_model(app_label, model_name)()
 
 
 def stub_custom_object_support(monkeypatch, *, is_custom_object=True, in_scope=True, settings=None):
@@ -51,13 +38,13 @@ def stub_custom_object_support(monkeypatch, *, is_custom_object=True, in_scope=T
     )
 
 
-def test_get_display_preference_uses_default_when_unset(monkeypatch):
+def test_display_preference_uses_default_when_unset(monkeypatch):
     monkeypatch.setattr(template_content, "_get_plugin_settings", lambda: {})
 
-    assert template_content.get_display_preference("dcim.device") == "additional_tab"
+    assert template_content.resolve_effective_display_preference("dcim.device") == "additional_tab"
 
 
-def test_get_display_preference_uses_model_override(monkeypatch):
+def test_display_preference_uses_model_override(monkeypatch):
     monkeypatch.setattr(
         template_content,
         "_get_plugin_settings",
@@ -67,8 +54,17 @@ def test_get_display_preference_uses_model_override(monkeypatch):
         },
     )
 
-    assert template_content.get_display_preference("dcim.device") == "left_page"
-    assert template_content.get_display_preference("dcim.site") == "right_page"
+    assert template_content.resolve_effective_display_preference("dcim.device") == "left_page"
+    assert template_content.resolve_effective_display_preference("dcim.site") == "right_page"
+
+
+def test_resolver_forces_full_width_for_custom_objects_at_the_resolver_layer(monkeypatch):
+    """The no-tab-for-custom-objects rule must hold for ANY caller of the shared
+    resolver — not just because the startup loop happens to skip custom objects."""
+    stub_custom_object_support(monkeypatch, settings={"display_default": "additional_tab"})
+    model = fake_model("netbox_custom_objects", "table3model")
+
+    assert template_content.resolve_display_preference_for_model(model) == "full_width_page"
 
 
 def test_resolve_effective_display_preference_for_custom_object_auto_converts():
