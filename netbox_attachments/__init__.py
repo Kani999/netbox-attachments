@@ -17,7 +17,7 @@ class NetBoxAttachmentsConfig(PluginConfig):
     author = "Jan Krupa"
     base_url = "netbox-attachments"
     default_settings = {
-        "applied_scope": "app",  # Changed from 'mode' - options: 'app' or 'model'
+        "applied_scope": "app",
         "scope_filter": [
             "dcim",
             "ipam",
@@ -25,7 +25,7 @@ class NetBoxAttachmentsConfig(PluginConfig):
             "tenancy",
             "virtualization",
             "wireless",
-        ],  # Merged from 'apps' and 'allowed_models'
+        ],
         "display_default": "additional_tab",
         "create_add_button": True,
         "display_setting": {},
@@ -33,6 +33,12 @@ class NetBoxAttachmentsConfig(PluginConfig):
     required_settings = []
     min_version = "4.5.0"
     max_version = "4.6.99"
+
+    def ready(self):
+        super().ready()
+
+        # Import for the @register side effect; see checks.py for what it warns about.
+        from netbox_attachments import checks  # noqa: F401
 
 
 config = NetBoxAttachmentsConfig
