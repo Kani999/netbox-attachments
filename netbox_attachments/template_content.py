@@ -4,9 +4,16 @@ from typing import List, Type
 from django.db.models import Count
 from django.db.utils import OperationalError
 
-from netbox_attachments.utils import _get_plugin_settings, is_custom_object_model, validate_object_type
+from netbox_attachments.utils import (
+    _get_plugin_settings,
+    custom_object_identifier,
+    is_custom_object_model,
+    validate_object_type,
+)
 
 logger = logging.getLogger(__name__)
+
+ATTACHMENT_PANEL_TEMPLATE = "netbox_attachments/netbox_attachment_panel.html"
 
 
 def _resolve_display_preference(app_model_name: str, plugin_settings: dict) -> str:
@@ -40,7 +47,7 @@ def render_attachment_panel(self) -> str:
         logger.error(f"Invalid model name format: {model_name!r}")
         return ""
     try:
-        return self.render("netbox_attachments/netbox_attachment_panel.html")
+        return self.render(ATTACHMENT_PANEL_TEMPLATE)
     except Exception as exc:
         logger.error(f"Failed to render attachment panel for {model_name}: {exc}")
         return ""
@@ -122,33 +129,82 @@ def register_attachment_tab_view(model) -> str:
     return view_name
 
 
-def discover_custom_object_models():
+def render_custom_object_panel(extension, position: str) -> str:
+    """
+    Render the attachment panel for `position` if the object in context is an in-scope
+    custom object configured to display there; otherwise return an empty string.
+
+    Ordered cheapest-check-first: a global extension is offered every object in NetBox,
+    so non-custom-object pages must exit on a string compare. Resolving the display
+    preference before the scope check keeps the query this can make — looking up a
+    CustomObjectType's name — to once per page render instead of once per hook.
+    """
+    obj = extension.context.get("object")
+    # NetBox hands global extensions whatever is in context, which need not be a model
+    # instance; without _meta there is nothing to match against.
+    if obj is None or not hasattr(obj, "_meta"):
+        return ""
+
+    model = type(obj)
+    if not is_custom_object_model(model):
+        return ""
+
+    plugin_settings = _get_plugin_settings()
+
+    # display_setting keys custom objects by type name, exactly as scope_filter does,
+    # but resolving that name costs a query — so only pay it when an override exists
+    # that could match.
+    display_settings = plugin_settings.get("display_setting")
+    if isinstance(display_settings, dict) and display_settings:
+        display_key = custom_object_identifier(model) or model._meta.label_lower
+    else:
+        display_key = model._meta.label_lower
+
+    preference = resolve_effective_display_preference(
+        display_key,
+        is_custom_object=True,
+        plugin_settings=plugin_settings,
+    )
+    if preference != position:
+        return ""
+
+    if not validate_object_type(model):
+        return ""
+
     try:
-        from django.apps import apps
+        return extension.render(ATTACHMENT_PANEL_TEMPLATE)
+    except Exception as exc:
+        logger.error(f"Failed to render attachment panel for {model._meta.label_lower}: {exc}")
+        return ""
 
-        custom_objects_app = apps.get_app_config("netbox_custom_objects")
-        all_models = list(custom_objects_app.get_models())
 
-        logger.debug(f"Found {len(all_models)} total models in netbox_custom_objects app")
+def create_custom_object_attachment_panel():
+    """
+    Build the globally registered extension that renders attachment panels on custom
+    object detail pages.
 
-        custom_object_models = [m for m in all_models if is_custom_object_model(m)]
+    Custom object models cannot be enumerated at import time: netbox_custom_objects
+    withholds its dynamic models until its own ready() has finished, and plugin ready()
+    order follows PLUGINS, so they are absent whenever this plugin loads first (issue
+    #110). Registering with models = None defers the decision to render time, when the
+    models reliably exist — which also lets object types created after startup work
+    without a NetBox restart.
+    """
+    from netbox.plugins import PluginTemplateExtension
 
-        logger.info(f"Discovered {len(custom_object_models)} custom object models for attachments")
+    class CustomObjectAttachmentPanel(PluginTemplateExtension):
+        models = None
 
-        return custom_object_models
+        def left_page(self):
+            return render_custom_object_panel(self, "left_page")
 
-    except LookupError:
-        logger.info("NetBox Custom Objects plugin not found - custom objects support disabled")
-        return []
-    except ImportError as e:
-        logger.warning(f"Could not import netbox_custom_objects: {e}")
-        return []
-    except Exception as e:
-        logger.error(
-            f"Unexpected error discovering custom object models: {e}",
-            exc_info=True,
-        )
-        return []
+        def right_page(self):
+            return render_custom_object_panel(self, "right_page")
+
+        def full_width_page(self):
+            return render_custom_object_panel(self, "full_width_page")
+
+    return CustomObjectAttachmentPanel
 
 
 def get_template_extensions() -> List[Type]:
@@ -160,7 +216,10 @@ def get_template_extensions() -> List[Type]:
     except Exception:
         return []
 
-    extensions = []
+    # Registered up front so custom object support survives any failure below: it
+    # enumerates no models and touches no database. Self-gating, so it is also safe
+    # to register without netbox_custom_objects installed.
+    extensions = [create_custom_object_attachment_panel()]
 
     try:
         plugin_settings = _get_plugin_settings()
@@ -170,13 +229,10 @@ def get_template_extensions() -> List[Type]:
             logger.warning("Invalid create_add_button value, defaulting to True")
             should_add_button = True
 
+        # Custom objects are deliberately not collected here; CustomObjectAttachmentPanel
+        # handles them at render time.
         all_models = list(apps.get_models())
         logger.debug(f"Found {len(all_models)} standard Django models")
-
-        custom_object_models = discover_custom_object_models()
-        if custom_object_models:
-            all_models.extend(custom_object_models)
-            logger.info(f"Added {len(custom_object_models)} custom object models to processing queue")
 
         seen_models = set()
         unique_models = []
@@ -193,6 +249,12 @@ def get_template_extensions() -> List[Type]:
             )
 
         for model in unique_models:
+            # When netbox_custom_objects loads first its dynamic models are already in
+            # apps.get_models(); a per-model extension here would render a second panel
+            # alongside the global one.
+            if is_custom_object_model(model):
+                continue
+
             if not validate_object_type(model):
                 continue
 
@@ -202,7 +264,6 @@ def get_template_extensions() -> List[Type]:
 
             display_preference = resolve_effective_display_preference(
                 app_model_name,
-                is_custom_object=is_custom_object_model(model),
                 plugin_settings=plugin_settings,
             )
 
