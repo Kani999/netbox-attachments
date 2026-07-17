@@ -2,6 +2,24 @@
 
 Configure plugin settings under `PLUGINS_CONFIG["netbox_attachments"]`.
 
+## Removed settings
+
+These were replaced in v7.1.0 and are **ignored** if still present:
+
+| Removed | Use instead |
+| --- | --- |
+| `apps` | `scope_filter` |
+| `allowed_models` | `scope_filter` |
+| `mode` | `applied_scope` (values are `app`/`model`, not `permissive`/`restrictive`) |
+
+NetBox keeps unrecognized keys in `PLUGINS_CONFIG` without reading them, so a stale config does not raise an error — the replacement setting silently falls back to its default instead. Because that default already covers several core apps, part of the configuration keeps working while the rest does not, which is easy to mistake for a bug in the plugin.
+
+Since v11.3.0 a Django system check warns about each removed setting at startup. To see them:
+
+```bash
+python3 manage.py check
+```
+
 ## Settings
 
 ### `applied_scope`
@@ -62,13 +80,20 @@ Controls top-level **Attachments** dropdown creation when using `additional_tab`
 - Type: `dict[str, str]`
 - Default: `{}`
 
-Per-model display override map.
+Per-model display override map. Keys use the same identifiers as `scope_filter`: `app_label.model` for standard models, and `netbox_custom_objects.<custom_object_type_name>` for custom objects.
 
 Example:
 
 ```python
-{"dcim.device": "left_page", "ipam.vlan": "additional_tab"}
+{
+    "dcim.device": "left_page",
+    "ipam.vlan": "additional_tab",
+    "netbox_custom_objects.display_calibration": "right_page",
+}
 ```
+
+!!! note
+    Before v11.3.0, custom objects were keyed here by an internal, primary-key-derived model name (`netbox_custom_objects.table12model`), so the identifier above silently had no effect.
 
 ## Example Configuration
 
@@ -92,6 +117,25 @@ PLUGINS_CONFIG = {
 }
 ```
 
-## Custom Objects Limitation
+## Custom Objects
 
-`additional_tab` mode is not available for custom object models using non-standard URL routing. For such models, the effective fallback is `full_width_page` unless an explicit left/right panel mode is configured.
+Attachments work on [netbox-custom-objects](https://github.com/netboxlabs/netbox-custom-objects) models. Enable them like any other app:
+
+- `applied_scope: "app"` — add `netbox_custom_objects` to `scope_filter`
+- `applied_scope: "model"` — add `netbox_custom_objects.<custom_object_type_name>`
+
+Custom object types created after NetBox starts are picked up automatically; no restart is needed.
+
+### Display limitations
+
+A custom object detail page is rendered by the Custom Objects plugin's own template, which hardcodes its tab bar and its button row. It renders only the `left_page`, `right_page`, and `full_width_page` panel hooks, so on custom objects:
+
+- **`additional_tab` is unavailable** — there is no way for a plugin to add a tab to that page. The effective display falls back to `full_width_page`, unless you pick a side panel explicitly:
+
+    ```python
+    "display_setting": {"netbox_custom_objects.display_calibration": "right_page"},
+    ```
+
+- **`create_add_button` has no effect** — the top-level "Attachments" dropdown cannot be rendered there. Use the panel's own "Add Attachment" and "Link Existing" buttons instead.
+
+Both limitations are properties of the Custom Objects detail template, not of this plugin, and would need an upstream change to lift.

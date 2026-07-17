@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.3.0] - 2026-07-17
+
+### Fixed
+
+- Attachments never appeared on Custom Object detail pages when `netbox_attachments` was listed before `netbox_custom_objects` in `PLUGINS` (issue #110). Template extensions were built while this plugin's `ready()` ran, but `netbox_custom_objects` withholds its dynamically generated models until its own `ready()` has finished, so model discovery found nothing and no panel was ever registered — regardless of `scope_filter`. Custom objects are now served by a single, globally registered template extension that resolves the object at render time, so plugin order in `PLUGINS` no longer matters.
+- Custom Object Types created after startup now get an attachment panel without restarting NetBox. Previously the model list was enumerated once during startup, so any type created later was invisible until the next restart.
+
+### Added
+
+- Startup warning (Django system check `netbox_attachments.W001`–`W003`) when `PLUGINS_CONFIG["netbox_attachments"]` still contains `apps`, `allowed_models`, or `mode`. These were replaced by `scope_filter` and `applied_scope` in v7.1.0, and NetBox keeps unknown keys without reading them, so a stale config silently fell back to the default `scope_filter` — which covers several core apps, making the configuration look partly honored (issue #110). The check names the replacement setting; run `manage.py check` to see it.
+
+### Changed
+
+- Custom object models are no longer enumerated at startup, removing this plugin's own database access during app loading and its dependency on `PLUGINS` ordering. (`apps.get_models()` is still called, so `netbox_custom_objects` may itself query when it loads first — but the plugin no longer drives that.)
+- `display_setting` now accepts the same identifier for custom objects that `scope_filter` does — `netbox_custom_objects.<custom_object_type_name>`. It previously keyed off the internal, primary-key-derived model name (`netbox_custom_objects.table12model`), so the documented identifier silently never matched and per-type display overrides had no effect.
+
 ## [11.2.3] - 2026-06-02
 
 ### Added
