@@ -7,7 +7,12 @@ from netbox_attachments import utils
 
 class FakeModel:
     def __init__(self, app_label, model_name):
-        self._meta = SimpleNamespace(app_label=app_label, model_name=model_name, abstract=False)
+        self._meta = SimpleNamespace(
+            app_label=app_label,
+            model_name=model_name,
+            label_lower=f"{app_label}.{model_name}",
+            abstract=False,
+        )
 
 
 class FakeInstance:

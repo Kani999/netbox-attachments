@@ -84,6 +84,28 @@ def is_custom_object_model(model):
         return False
 
 
+def custom_object_identifier(model):
+    """
+    Return the config identifier for a custom object model, or None if unresolvable.
+
+    Custom object models are named after their backing table's primary key
+    ("table134model"), which is opaque and differs between installs, so settings key off
+    the Custom Object Type's name instead: "netbox_custom_objects.cotab2_asset". Both
+    scope_filter and display_setting must use this, or one of them silently never matches.
+    """
+    if not is_custom_object_model(model):
+        return None
+
+    try:
+        from netbox_custom_objects.models import CustomObjectType
+
+        cot = CustomObjectType.objects.get(id=model.custom_object_type_id)
+    except (ImportError, AttributeError, ObjectDoesNotExist):
+        return None
+
+    return f"{model._meta.app_label}.{cot.name}"
+
+
 def validate_object_type(model):
     """
     Determines if a Django model is permitted to have attachments.
@@ -122,17 +144,13 @@ def validate_object_type(model):
         if app_label in scope_filter:
             return True
         # Need model_identifier for the specific-model check.
-        # For custom objects, resolve the identifier via DB (only when necessary).
+        # For custom objects this resolves via DB, so it runs only when necessary.
         if is_custom_object_model(model):
-            try:
-                from netbox_custom_objects.models import CustomObjectType
-
-                cot = CustomObjectType.objects.get(id=model.custom_object_type_id)
-                model_identifier = f"{model._meta.app_label}.{cot.name}"
-            except (ImportError, AttributeError, ObjectDoesNotExist):
+            model_identifier = custom_object_identifier(model)
+            if model_identifier is None:
                 return False
         else:
-            model_identifier = f"{model._meta.app_label}.{model._meta.model_name}"
+            model_identifier = model._meta.label_lower
         return model_identifier in scope_filter
 
     return False
