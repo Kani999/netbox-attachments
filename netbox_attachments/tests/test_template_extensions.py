@@ -163,6 +163,17 @@ def test_custom_object_panel_skips_objects_without_meta(monkeypatch):
     assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
 
 
+def test_custom_object_panel_declines_model_classes(monkeypatch):
+    """A model CLASS in context must be declined, not crash: type(cls) is the metaclass,
+    which has no _meta — the guard must test the class the code actually reads."""
+    stub_custom_object_support(monkeypatch)
+    model_class = type(make_object())
+    extension = FakeExtension(model_class)
+
+    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert extension.rendered == []
+
+
 def test_custom_object_panel_swallows_render_errors(monkeypatch):
     stub_custom_object_support(monkeypatch)
     extension = FakeExtension(make_object(), raises=True)

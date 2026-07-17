@@ -140,12 +140,14 @@ def render_custom_object_panel(extension, position: str) -> str:
     CustomObjectType's name — to once per page render instead of once per hook.
     """
     obj = extension.context.get("object")
-    # NetBox hands global extensions whatever is in context, which need not be a model
-    # instance; without _meta there is nothing to match against.
-    if obj is None or not hasattr(obj, "_meta"):
+    model = type(obj)
+    # NetBox hands global extensions whatever is in context — None, a non-model, or
+    # even a model class (whose type() is the metaclass). Everything downstream reads
+    # the CLASS's _meta, so that is what must exist; checking obj._meta instead would
+    # let a model class through and crash on ModelBase._meta.
+    if not hasattr(model, "_meta"):
         return ""
 
-    model = type(obj)
     if not is_custom_object_model(model):
         return ""
 
