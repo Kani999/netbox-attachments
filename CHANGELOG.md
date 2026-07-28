@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.3.1] - 2026-07-28
+
+### Changed
+
+- Consolidated attachment-panel display resolution (issue #112). Side and full-width panels for every in-scope model — standard and custom — are now served by a single render-time template extension; the startup loop registers only `additional_tab` tab views. This removes the duplicated display logic that previously had to be kept in sync across the two paths (the source of the `display_setting` bug fixed in 11.3.0). No user-facing behavior change.
+
 ## [11.3.0] - 2026-07-28
 
 ### Fixed
