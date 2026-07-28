@@ -24,7 +24,7 @@ def test_no_warnings_when_plugin_unconfigured(monkeypatch):
 
 
 def test_apps_setting_warns_and_names_replacement(monkeypatch):
-    """The config from issue #110: 'apps' is silently ignored without this check."""
+    """'apps' is silently ignored without this check."""
     monkeypatch.setattr(
         checks,
         "_get_plugin_settings",
