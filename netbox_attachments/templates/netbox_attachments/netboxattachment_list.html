@@ -1,7 +1,6 @@
 {% extends 'generic/object_list.html' %}
-
 {% block head %}
-<style>
+    <style>
 /* Use rgba with --tblr-danger-rgb (214,57,57 in both modes) so a single rule
    handles light and dark mode — semi-transparency blends naturally against any
    table background without needing [data-bs-theme=dark] overrides. */
@@ -16,5 +15,5 @@
     --tblr-table-hover-bg:      rgba(var(--tblr-danger-rgb), 0.22);
     --tblr-table-hover-color:   inherit;
 }
-</style>
+    </style>
 {% endblock %}

@@ -28,7 +28,7 @@ _VIEWS_PY = _ROOT / "views.py"
 
 
 # ===========================================================================
-# Feature 1 — Issue 3: Unlink confirmation template fix
+# Feature 1 — Templates: Unlink confirmation object label
 # ===========================================================================
 
 
@@ -76,7 +76,7 @@ def test_content_type_str_differs_from_app_label_model_format():
 
 
 # ===========================================================================
-# Feature 2 — Issue 4: Object-detail attachment tab get_children() logic
+# Feature 2 — Views: Object-detail attachment tab get_children() logic
 # ===========================================================================
 
 
@@ -155,7 +155,7 @@ def test_get_children_returns_prefetched_queryset():
 
 
 # ===========================================================================
-# Feature 3 — Issue 2: Assignment filter form field names
+# Feature 3 — Forms: Assignment filter form field names
 # ===========================================================================
 
 
