@@ -11,8 +11,10 @@ class FakeExtension:
         self.context = {"object": obj}
         self.raises = raises
         self.rendered = []
+        self.render_calls = 0
 
     def render(self, template_name, extra_context=None):
+        self.render_calls += 1
         if self.raises:
             raise RuntimeError("template blew up")
         self.rendered.append(template_name)
@@ -195,6 +197,7 @@ def test_custom_object_panel_swallows_render_errors(monkeypatch):
     extension = FakeExtension(make_object(), raises=True)
 
     assert template_content.render_panel(extension, "full_width_page") == ""
+    assert extension.render_calls == 1  # the '' came from the swallowed error, not an earlier gate
 
 
 def test_custom_object_panel_display_setting_uses_the_type_name_key(monkeypatch):
