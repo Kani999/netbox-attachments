@@ -11,8 +11,10 @@ class FakeExtension:
         self.context = {"object": obj}
         self.raises = raises
         self.rendered = []
+        self.render_calls = 0
 
     def render(self, template_name, extra_context=None):
+        self.render_calls += 1
         if self.raises:
             raise RuntimeError("template blew up")
         self.rendered.append(template_name)
@@ -104,19 +106,19 @@ def test_custom_object_panel_renders_at_configured_position(monkeypatch):
     stub_custom_object_support(monkeypatch, settings={"display_default": "full_width_page"})
     extension = FakeExtension(make_object())
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == (
+    assert template_content.render_panel(extension, "full_width_page") == (
         "<panel:netbox_attachments/netbox_attachment_panel.html>"
     )
-    assert template_content.render_custom_object_panel(extension, "left_page") == ""
-    assert template_content.render_custom_object_panel(extension, "right_page") == ""
+    assert template_content.render_panel(extension, "left_page") == ""
+    assert template_content.render_panel(extension, "right_page") == ""
 
 
 def test_custom_object_panel_honours_left_page_setting(monkeypatch):
     stub_custom_object_support(monkeypatch, settings={"display_default": "left_page"})
     extension = FakeExtension(make_object())
 
-    assert template_content.render_custom_object_panel(extension, "left_page") != ""
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "left_page") != ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
 
 
 def test_custom_object_panel_falls_back_from_additional_tab_to_full_width(monkeypatch):
@@ -124,15 +126,35 @@ def test_custom_object_panel_falls_back_from_additional_tab_to_full_width(monkey
     stub_custom_object_support(monkeypatch, settings={"display_default": "additional_tab"})
     extension = FakeExtension(make_object())
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") != ""
-    assert template_content.render_custom_object_panel(extension, "left_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") != ""
+    assert template_content.render_panel(extension, "left_page") == ""
 
 
-def test_custom_object_panel_skips_non_custom_objects(monkeypatch):
-    stub_custom_object_support(monkeypatch, is_custom_object=False)
+def test_panel_serves_standard_in_scope_model(monkeypatch):
+    """The consolidated panel serves standard models too, not only custom objects."""
+    stub_custom_object_support(monkeypatch, is_custom_object=False, settings={"display_default": "full_width_page"})
     extension = FakeExtension(make_object("dcim", "device"))
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") != ""
+
+
+def test_panel_skips_standard_model_out_of_scope(monkeypatch):
+    stub_custom_object_support(
+        monkeypatch, is_custom_object=False, in_scope=False, settings={"display_default": "full_width_page"}
+    )
+    extension = FakeExtension(make_object("dcim", "device"))
+
+    assert template_content.render_panel(extension, "full_width_page") == ""
+    assert extension.rendered == []
+
+
+def test_panel_skips_additional_tab_models(monkeypatch):
+    """additional_tab models get a startup-registered tab, never a render-time panel."""
+    stub_custom_object_support(monkeypatch, is_custom_object=False, settings={"display_default": "additional_tab"})
+    extension = FakeExtension(make_object("dcim", "device"))
+
+    for position in ("left_page", "right_page", "full_width_page"):
+        assert template_content.render_panel(extension, position) == ""
     assert extension.rendered == []
 
 
@@ -140,7 +162,7 @@ def test_custom_object_panel_skips_out_of_scope_custom_objects(monkeypatch):
     stub_custom_object_support(monkeypatch, in_scope=False)
     extension = FakeExtension(make_object())
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
 
 
 def test_custom_object_panel_skips_when_no_object_in_context(monkeypatch):
@@ -148,7 +170,7 @@ def test_custom_object_panel_skips_when_no_object_in_context(monkeypatch):
     stub_custom_object_support(monkeypatch)
     extension = FakeExtension(None)
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
 
 
 def test_custom_object_panel_skips_objects_without_meta(monkeypatch):
@@ -156,7 +178,7 @@ def test_custom_object_panel_skips_objects_without_meta(monkeypatch):
     stub_custom_object_support(monkeypatch)
     extension = FakeExtension("not a model")
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
 
 
 def test_custom_object_panel_declines_model_classes(monkeypatch):
@@ -166,7 +188,7 @@ def test_custom_object_panel_declines_model_classes(monkeypatch):
     model_class = type(make_object())
     extension = FakeExtension(model_class)
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
     assert extension.rendered == []
 
 
@@ -174,7 +196,8 @@ def test_custom_object_panel_swallows_render_errors(monkeypatch):
     stub_custom_object_support(monkeypatch)
     extension = FakeExtension(make_object(), raises=True)
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
+    assert extension.render_calls == 1  # the '' came from the swallowed error, not an earlier gate
 
 
 def test_custom_object_panel_display_setting_uses_the_type_name_key(monkeypatch):
@@ -196,8 +219,8 @@ def test_custom_object_panel_display_setting_uses_the_type_name_key(monkeypatch)
     )
     extension = FakeExtension(make_object(model_name="table134model"))
 
-    assert template_content.render_custom_object_panel(extension, "left_page") != ""
-    assert template_content.render_custom_object_panel(extension, "full_width_page") == ""
+    assert template_content.render_panel(extension, "left_page") != ""
+    assert template_content.render_panel(extension, "full_width_page") == ""
 
 
 def test_custom_object_panel_skips_identifier_lookup_without_display_setting(monkeypatch):
@@ -207,7 +230,7 @@ def test_custom_object_panel_skips_identifier_lookup_without_display_setting(mon
     monkeypatch.setattr(template_content, "custom_object_identifier", lambda model: calls.append(model) or None)
     extension = FakeExtension(make_object())
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") != ""
+    assert template_content.render_panel(extension, "full_width_page") != ""
     assert calls == []
 
 
@@ -222,13 +245,13 @@ def test_custom_object_panel_falls_back_when_identifier_unresolvable(monkeypatch
     monkeypatch.setattr(template_content, "custom_object_identifier", lambda model: None)
     extension = FakeExtension(make_object())
 
-    assert template_content.render_custom_object_panel(extension, "full_width_page") != ""
+    assert template_content.render_panel(extension, "full_width_page") != ""
 
 
 def test_custom_object_panel_defers_scope_check_until_position_matches(monkeypatch):
     """
     validate_object_type can query the database, so it must run only for the one hook
-    that will render — not once per hook, and never on non-custom-object pages.
+    that will render — not once per hook.
     """
     calls = []
     stub_custom_object_support(monkeypatch, settings={"display_default": "full_width_page"})
@@ -236,6 +259,6 @@ def test_custom_object_panel_defers_scope_check_until_position_matches(monkeypat
     extension = FakeExtension(make_object())
 
     for position in ("left_page", "right_page", "full_width_page"):
-        template_content.render_custom_object_panel(extension, position)
+        template_content.render_panel(extension, position)
 
     assert len(calls) == 1

@@ -40,8 +40,8 @@ def resolve_effective_display_preference(
 
 def resolve_display_preference_for_model(model, plugin_settings: dict | None = None) -> str:
     """
-    The one model -> effective display position answer, shared by the startup loop and
-    the render-time panel so the two cannot drift (issue #112).
+    The one model -> effective display position answer, shared by the startup loop
+    (additional_tab) and the render-time panel (all positions).
 
     Custom objects are keyed in display_setting by their type name — the same
     identifier scope_filter uses — but resolving that name costs a query, so it is
@@ -72,17 +72,6 @@ def _render_or_empty(extension, template_name: str, label: str, extra_context: d
     except Exception as exc:
         logger.error(f"Failed to render {template_name} for {label}: {exc}")
         return ""
-
-
-def render_attachment_panel(self) -> str:
-    model_name = self.models[0] if (hasattr(self, "models") and self.models) else getattr(self, "model", None)
-    if model_name is None:
-        logger.error("No model or models attribute found on extension")
-        return ""
-    if "." not in str(model_name):
-        logger.error(f"Invalid model name format: {model_name!r}")
-        return ""
-    return _render_or_empty(self, ATTACHMENT_PANEL_TEMPLATE, str(model_name))
 
 
 def create_add_attachment_button(model_name: str, url_pattern_name: str):
@@ -155,26 +144,20 @@ def register_attachment_tab_view(model) -> str:
     return view_name
 
 
-def render_custom_object_panel(extension, position: str) -> str:
+def render_panel(extension, position: str) -> str:
     """
-    Render the attachment panel for `position` if the object in context is an in-scope
-    custom object configured to display there; otherwise return an empty string.
+    Render the attachment panel for `position` when the object in context is an in-scope
+    model whose effective display preference is `position`; otherwise return ''.
 
-    Ordered cheapest-check-first: a global extension is offered every object in NetBox,
-    so non-custom-object pages must exit on a string compare before any settings or
-    database work. The CustomObjectType name lookups further down are cached per
-    generated class (see custom_object_identifier).
+    Serves standard and custom models alike. Checks run cheapest-first: the display
+    resolution bails on a string compare before validate_object_type, the only step
+    that can hit the database.
     """
     obj = extension.context.get("object")
     model = type(obj)
-    # NetBox hands global extensions whatever is in context — None, a non-model, or
-    # even a model class (whose type() is the metaclass). Everything downstream reads
-    # the CLASS's _meta, so that is what must exist; checking obj._meta instead would
-    # let a model class through and crash on ModelBase._meta.
+    # Context may hold None, a non-model, or a model class (whose type() is the
+    # metaclass); everything below reads the class's _meta, so guard that.
     if not hasattr(model, "_meta"):
-        return ""
-
-    if not is_custom_object_model(model):
         return ""
 
     if resolve_display_preference_for_model(model) != position:
@@ -186,33 +169,29 @@ def render_custom_object_panel(extension, position: str) -> str:
     return _render_or_empty(extension, ATTACHMENT_PANEL_TEMPLATE, model._meta.label_lower)
 
 
-def create_custom_object_attachment_panel():
+def create_attachment_panel():
     """
-    Build the globally registered extension that renders attachment panels on custom
-    object detail pages.
+    Global extension (models = None) that renders attachment panels at request time.
 
-    Custom object models cannot be enumerated at import time: netbox_custom_objects
-    withholds its dynamic models until its own ready() has finished, and plugin ready()
-    order follows PLUGINS, so they are absent whenever this plugin loads first (issue
-    #110). Registering with models = None defers the decision to render time, when the
-    models reliably exist — which also lets object types created after startup work
-    without a NetBox restart.
+    Deferring to render time keeps it independent of PLUGINS load order and picks up
+    custom object types created after startup — neither of which a startup-time model
+    enumeration can do.
     """
     from netbox.plugins import PluginTemplateExtension
 
-    class CustomObjectAttachmentPanel(PluginTemplateExtension):
+    class AttachmentPanel(PluginTemplateExtension):
         models = None
 
         def left_page(self):
-            return render_custom_object_panel(self, "left_page")
+            return render_panel(self, "left_page")
 
         def right_page(self):
-            return render_custom_object_panel(self, "right_page")
+            return render_panel(self, "right_page")
 
         def full_width_page(self):
-            return render_custom_object_panel(self, "full_width_page")
+            return render_panel(self, "full_width_page")
 
-    return CustomObjectAttachmentPanel
+    return AttachmentPanel
 
 
 def get_template_extensions() -> List[Type]:
@@ -224,10 +203,9 @@ def get_template_extensions() -> List[Type]:
     except Exception:
         return []
 
-    # Registered up front so custom object support survives any failure below: it
-    # enumerates no models and touches no database. Self-gating, so it is also safe
-    # to register without netbox_custom_objects installed.
-    extensions = [create_custom_object_attachment_panel()]
+    # Registered up front so the render-time panel survives any failure below: it
+    # enumerates no models, touches no database, and self-gates per request.
+    extensions = [create_attachment_panel()]
 
     try:
         plugin_settings = _get_plugin_settings()
@@ -237,8 +215,8 @@ def get_template_extensions() -> List[Type]:
             logger.warning("Invalid create_add_button value, defaulting to True")
             should_add_button = True
 
-        # Custom objects are deliberately not collected here; CustomObjectAttachmentPanel
-        # handles them at render time.
+        # This loop only registers additional_tab tabs, which must exist at startup;
+        # side/full-width panels are served at request time by the render-time panel.
         all_models = list(apps.get_models())
         logger.debug(f"Found {len(all_models)} standard Django models")
 
@@ -257,44 +235,26 @@ def get_template_extensions() -> List[Type]:
             )
 
         for model in unique_models:
-            # When netbox_custom_objects loads first its dynamic models are already in
-            # apps.get_models(); a per-model extension here would render a second panel
-            # alongside the global one, and the additional_tab branch below must never
-            # see them (their detail pages cannot host tabs or top buttons).
-            # Consolidating the two mechanisms is tracked in issue #112.
+            # Custom objects are served entirely at render time and can never use
+            # additional_tab, so skip them here — this also keeps startup free of
+            # custom-object DB access and PLUGINS-order dependence.
             if is_custom_object_model(model):
                 continue
 
             if not validate_object_type(model):
                 continue
 
+            if resolve_display_preference_for_model(model, plugin_settings=plugin_settings) != "additional_tab":
+                continue
+
             app_label = model._meta.app_label
             model_name = model._meta.model_name
             app_model_name = model._meta.label_lower
+            view_name = register_attachment_tab_view(model)
 
-            display_preference = resolve_display_preference_for_model(model, plugin_settings=plugin_settings)
-
-            if display_preference == "additional_tab":
-                view_name = register_attachment_tab_view(model)
-
-                if should_add_button:
-                    url_pattern_name = f"{app_label}:{model_name}_{view_name}"
-                    extensions.append(create_add_attachment_button(app_model_name, url_pattern_name))
-                continue
-
-            from netbox.plugins import PluginTemplateExtension
-
-            extension_name = f"{app_label}_{model_name}_attachment_extension"
-            extension_class = type(
-                extension_name,
-                (PluginTemplateExtension,),
-                {
-                    "models": [app_model_name],
-                    display_preference: render_attachment_panel,
-                },
-            )
-
-            extensions.append(extension_class)
+            if should_add_button:
+                url_pattern_name = f"{app_label}:{model_name}_{view_name}"
+                extensions.append(create_add_attachment_button(app_model_name, url_pattern_name))
 
     except OperationalError:
         logger.error("Database is not ready, skipping template extensions setup")
