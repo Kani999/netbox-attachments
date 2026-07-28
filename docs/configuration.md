@@ -6,11 +6,11 @@ Configure plugin settings under `PLUGINS_CONFIG["netbox_attachments"]`.
 
 These were replaced in v7.1.0 and are **ignored** if still present:
 
-| Removed | Use instead | Check ID |
-| --- | --- | --- |
-| `apps` | `scope_filter` | `netbox_attachments.W001` |
-| `allowed_models` | `scope_filter` | `netbox_attachments.W002` |
-| `mode` | `applied_scope` (values are `app`/`model`, not `permissive`/`restrictive`) | `netbox_attachments.W003` |
+| Removed | Use instead |
+| --- | --- |
+| `apps` | `scope_filter` |
+| `allowed_models` | `scope_filter` |
+| `mode` | `applied_scope` (values are `app`/`model`, not `permissive`/`restrictive`) |
 
 NetBox keeps unrecognized keys in `PLUGINS_CONFIG` without reading them, so a stale config does not raise an error — the replacement setting silently falls back to its default instead. Because that default already covers several core apps, part of the configuration keeps working while the rest does not, which is easy to mistake for a bug in the plugin.
 
@@ -18,12 +18,6 @@ Since v11.3.0 a Django system check warns about each removed setting at startup.
 
 ```bash
 python3 manage.py check
-```
-
-The check IDs above are stable and will not be renumbered. Deleting the stale key is the correct fix, but if you must keep it, silence the warning in `configuration.py`:
-
-```python
-SILENCED_SYSTEM_CHECKS = ["netbox_attachments.W001"]
 ```
 
 ## Settings
@@ -69,7 +63,7 @@ Default display location for attachment UI. Each value controls where the panel 
 - `full_width_page` — injects the panel as a full-width section below the main content.
 
 !!! warning
-    An unrecognized value matches none of the four render positions, so no attachment UI appears at all for the affected models — no tab, no panel. There is no error or warning. Use only the four values listed above.
+    Unrecognized values for `display_default` will silently produce a non-functional panel extension. Use only the four values listed above.
 
 ### `create_add_button`
 

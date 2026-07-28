@@ -22,7 +22,14 @@ def _get_plugin_settings():
 
 
 def choice_default(value, choices, default=None):
-    """Return value if it is among choices, else default."""
+    """
+    Return the given value if it is among the allowed choices, or return the default value.
+
+    Checks if the provided value exists in the collection of choices. If found, the value is returned;
+    otherwise, the specified default (or None if not provided) is returned.
+    """
+
+    # Return value only if present in choices, else return default value
     if value not in choices:
         return default
     return value
@@ -30,14 +37,23 @@ def choice_default(value, choices, default=None):
 
 def attachment_upload(instance, filename):
     """
-    Build an attachment's upload path under the fixed "netbox-attachments/" prefix.
+    Generate a file upload path for an attachment.
 
-    An instance name that differs from the uploaded filename renames the file, keeping
-    the original extension(s).
+    Constructs an upload path using a fixed directory prefix ("netbox-attachments/") and
+    the filename. If the provided filename differs from the instance's name, the filename
+    is updated to match the instance's name while preserving its original file extension(s).
+
+    Args:
+        instance: A model instance with a 'name' attribute.
+        filename: The original filename; its extension(s) are preserved if a rename is applied.
+
+    Returns:
+        A string representing the formatted file upload path.
     """
     path = "netbox-attachments/"
 
     if instance.name and instance.name != filename:
+        # Rename the file to the provided name, if any. Attempt to preserve the file extension.
         extension = "".join(Path(filename).suffixes)
         filename = "".join([Path(instance.name).name, extension])  # strip dir components
 
@@ -46,10 +62,17 @@ def attachment_upload(instance, filename):
 
 def is_custom_object_model(model):
     """
-    True for a netbox_custom_objects dynamic model.
+    Determines if a model is a NetBox Custom Objects dynamic model.
 
-    CustomObject subclasses only, which excludes the plugin's own metadata models
-    (CustomObjectType, CustomObjectTypeField, ...) living in the same app.
+    Checks if the model is from the netbox_custom_objects app and inherits
+    from the CustomObject base class. This excludes the plugin's metadata
+    models like CustomObjectType, CustomObjectTypeField, etc.
+
+    Args:
+        model: A Django model class
+
+    Returns:
+        bool: True if this is a custom object model, False otherwise
     """
     if model._meta.app_label != "netbox_custom_objects":
         return False
@@ -103,12 +126,24 @@ def _resolve_custom_object_identifier(model):
 
 def validate_object_type(model):
     """
-    Whether the model is permitted to have attachments, per scope_filter/applied_scope.
+    Determines if a Django model is permitted to have attachments.
 
-    In 'model' scope the filter is mixed: a bare app label ('dcim') enables every model in
-    that app, an exact identifier ('dcim.device') enables only that one. Custom objects are
-    matched by their CustomObjectType name, not their generated class name — see
-    custom_object_identifier.
+    This function uses a unified filtering approach for both standard models and custom objects.
+    It checks the model against the plugin's scope_filter configuration.
+
+    For custom objects, the function uses CustomObjectType names in the format:
+    'netbox_custom_objects.{CustomObjectType.name}' (e.g., 'netbox_custom_objects.attachment')
+
+    When applied_scope='model', the function supports mixed mode filtering:
+    - App label entries (e.g., 'dcim') enable ALL models from that app
+    - Specific model entries (e.g., 'dcim.device') enable only that model
+
+    Args:
+        model: A Django model class or instance with a _meta attribute that contains
+               'app_label' and 'model_name'.
+
+    Returns:
+        bool: True if the model is allowed to have attachments; False otherwise.
     """
     plugin_settings = _get_plugin_settings()
     applied_scope = choice_default(plugin_settings.get("applied_scope"), ("app", "model"), "app")

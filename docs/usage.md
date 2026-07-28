@@ -4,17 +4,17 @@
 
 ### Object detail attachment tab
 
-Open a supported NetBox object detail page. The attachment tab shows a table of all assignments for that object, rendered using `NetBoxAttachmentForObjectTable`. Columns shown by default: Attachment (link), Description, Size, Links, Tags, Created, and Actions. A **File** column is also available and can be enabled through the table's column selector.
+Open a supported NetBox object detail page. The attachment tab shows a table of all assignments for that object, rendered using `NetBoxAttachmentForObjectTable` with the following columns: Attachment (link), Description, File, Size, Links, and Actions (download and Unlink).
 
 The **Links** column shows the total number of objects this attachment is assigned to across the whole system, as a clickable number linking to the attachment detail page. A count of 1 means unlinking will leave the attachment with no assignments; a count greater than 1 means the attachment remains linked elsewhere.
 
-The Actions column holds a Download button plus the standard NetBox actions dropdown. Choosing **Delete** there removes only that assignment — the attachment and its file on disk are kept, so the effect is an unlink. Below the table, two buttons are available: "Add Attachment" (upload and assign a new file) and "Link Existing" (assign an already-uploaded attachment).
+Each row includes an Unlink button to remove that assignment without deleting the underlying file. Below the table, two buttons are available: "Add Attachment" (upload and assign a new file) and "Link Existing" (assign an already-uploaded attachment).
 
 Display location of the tab depends on the `display_default` and `display_setting` configuration options.
 
 ### Panel display modes (left_page, right_page, full_width_page)
 
-When the display mode is `left_page`, `right_page`, or `full_width_page`, the attachment UI is injected as an inline panel on the object detail page. The panel renders the same `NetBoxAttachmentForObjectTable` as the tab view, scoped to that object's assignments — including the Download button and the Delete action described above.
+When the display mode is `left_page`, `right_page`, or `full_width_page`, the attachment UI is injected as an inline panel on the object detail page. The panel renders the same `NetBoxAttachmentForObjectTable` as the tab view: each row includes a Download button and an Unlink button scoped to that object's assignments.
 
 The panel header contains "Add Attachment" and "Link Existing" buttons identical to those in the tab view. The table is loaded via HTMX from the dedicated `netboxattachment_panel_list` endpoint (`/plugins/netbox-attachments/netbox-attachment-panel/`), which filters assignments by `object_type_id` and `object_id`.
 

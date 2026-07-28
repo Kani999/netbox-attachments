@@ -6,7 +6,7 @@ Warns about settings that were removed in v7.1.0 when ``apps`` and
 keys, so a removed setting is not an error: it survives untouched in
 ``PLUGINS_CONFIG`` while nothing reads it, and the replacement silently falls
 back to its default. That default covers several core apps, so part of the
-configuration keeps working and the rest fails without a clue.
+configuration keeps working and the rest fails without a clue (issue #110).
 """
 
 from django.core.checks import Warning, register
@@ -17,9 +17,8 @@ from netbox_attachments.version import __version__
 _MERGED_HINT = "'apps' and 'allowed_models' were merged, so combine both into the single 'scope_filter' list."
 
 # Removed setting -> (replacement, stable check ID, extra hint).
-# The IDs are a published contract (docs/configuration.md, CHANGELOG, and any
-# user's SILENCED_SYSTEM_CHECKS): never renumber or reuse one, even if an entry
-# is dropped from this table.
+# The IDs are a published contract (CHANGELOG, SILENCED_SYSTEM_CHECKS): never
+# renumber or reuse one, even if an entry is dropped from this table.
 # `mode` is not a pure rename — its values changed along with its name.
 REMOVED_SETTINGS = {
     "apps": ("scope_filter", "netbox_attachments.W001", _MERGED_HINT),
