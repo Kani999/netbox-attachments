@@ -1,13 +1,7 @@
 """Unit tests for standalone pytest execution."""
 
-from types import SimpleNamespace
-
 from netbox_attachments import utils
-
-
-class FakeModel:
-    def __init__(self, app_label, model_name):
-        self._meta = SimpleNamespace(app_label=app_label, model_name=model_name, abstract=False)
+from netbox_attachments.tests.conftest import fake_model
 
 
 class FakeInstance:
@@ -52,9 +46,9 @@ def test_validate_object_type_app_scope(monkeypatch):
         lambda: {"applied_scope": "app", "scope_filter": ["dcim", "ipam"]},
     )
 
-    assert utils.validate_object_type(FakeModel("dcim", "device")) is True
-    assert utils.validate_object_type(FakeModel("ipam", "ipaddress")) is True
-    assert utils.validate_object_type(FakeModel("tenancy", "tenant")) is False
+    assert utils.validate_object_type(fake_model("dcim", "device")) is True
+    assert utils.validate_object_type(fake_model("ipam", "ipaddress")) is True
+    assert utils.validate_object_type(fake_model("tenancy", "tenant")) is False
 
 
 def test_validate_object_type_model_scope_specific_and_mixed(monkeypatch):
@@ -67,10 +61,10 @@ def test_validate_object_type_model_scope_specific_and_mixed(monkeypatch):
         },
     )
 
-    assert utils.validate_object_type(FakeModel("dcim", "device")) is True
-    assert utils.validate_object_type(FakeModel("ipam", "ipaddress")) is True
-    assert utils.validate_object_type(FakeModel("virtualization", "cluster")) is True
-    assert utils.validate_object_type(FakeModel("ipam", "prefix")) is False
+    assert utils.validate_object_type(fake_model("dcim", "device")) is True
+    assert utils.validate_object_type(fake_model("ipam", "ipaddress")) is True
+    assert utils.validate_object_type(fake_model("virtualization", "cluster")) is True
+    assert utils.validate_object_type(fake_model("ipam", "prefix")) is False
 
 
 def test_validate_object_type_invalid_config_graceful(monkeypatch):
@@ -80,7 +74,7 @@ def test_validate_object_type_invalid_config_graceful(monkeypatch):
         lambda: {"applied_scope": "invalid", "scope_filter": "dcim"},
     )
 
-    assert utils.validate_object_type(FakeModel("dcim", "device")) is False
+    assert utils.validate_object_type(fake_model("dcim", "device")) is False
 
 
 def test_validate_object_type_empty_scope_disables_all(monkeypatch):
@@ -90,5 +84,5 @@ def test_validate_object_type_empty_scope_disables_all(monkeypatch):
         lambda: {"applied_scope": "model", "scope_filter": []},
     )
 
-    assert utils.validate_object_type(FakeModel("dcim", "device")) is False
-    assert utils.validate_object_type(FakeModel("ipam", "ipaddress")) is False
+    assert utils.validate_object_type(fake_model("dcim", "device")) is False
+    assert utils.validate_object_type(fake_model("ipam", "ipaddress")) is False

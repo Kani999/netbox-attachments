@@ -323,11 +323,35 @@ def test_object_attachment_for_object_table_tags_in_default_columns():
     pytest.fail("NetBoxAttachmentForObjectTable.Meta.default_columns not found")
 
 
+def _queryset_calls(source, class_name):
+    """
+    Map method name -> its string arguments for `class_name`'s queryset chain.
+
+    Parsed rather than matched as text: where the formatter chooses to break the chain
+    says nothing about what it does, and a reformat should not fail this test.
+    """
+    for node in ast.walk(ast.parse(source)):
+        if not (isinstance(node, ast.ClassDef) and node.name == class_name):
+            continue
+        for stmt in node.body:
+            targets = getattr(stmt, "targets", [])
+            if not (isinstance(stmt, ast.Assign) and any(getattr(t, "id", None) == "queryset" for t in targets)):
+                continue
+            calls = {}
+            expr = stmt.value
+            while isinstance(expr, ast.Call) and isinstance(expr.func, ast.Attribute):
+                calls[expr.func.attr] = tuple(a.value for a in expr.args if isinstance(a, ast.Constant))
+                expr = expr.func.value
+            return calls
+    return {}
+
+
 def test_views_py_assignment_list_prefetches_tags():
     """NetBoxAttachmentAssignmentListView queryset must select_related FKs and prefetch 'tags'."""
-    source = _VIEWS_PY.read_text()
-    assert 'select_related("attachment", "object_type")' in source
-    assert '.prefetch_related("tags")' in source
+    calls = _queryset_calls(_VIEWS_PY.read_text(), "NetBoxAttachmentAssignmentListView")
+
+    assert calls.get("select_related") == ("attachment", "object_type")
+    assert "tags" in calls.get("prefetch_related", ())
 
 
 def test_views_py_panel_list_prefetches_tags():
