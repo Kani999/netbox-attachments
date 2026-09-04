@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.0.0] - 2026-09-04
+
+This release supports NetBox 4.7.x only. Deployments on NetBox 4.5 or 4.6 should stay on the 11.x line.
+
+### Changed
+
+- Compatibility window moved to NetBox `4.7.x` (`min_version = "4.7.0"`, `max_version = "4.7.99"`). NetBox 4.7.0 refused to load the plugin because of the previous `4.6.99` ceiling (issue #116).
+- List views declare their actions as `ObjectAction` classes from `netbox.object_actions`. NetBox 4.7 dropped the shim that translated the legacy dict form, so the bump alone would have raised `AttributeError` on every attachment and assignment list page.
+- Django requirement raised to `>=6.1`, matching NetBox 4.7.
+- Migration `0012` now records `related_name="+"` on `NetBoxAttachment.owner`, matching the change NetBox 4.7 made to `OwnerMixin`. No schema change; existing installs are unaffected.
+- Removed a redundant `objects` manager on `NetBoxAttachmentAssignment` (`NetBoxModel` already provides the same `RestrictedQuerySet` manager) and a stray `__init__.py` in the templates directory. No behavior change.
+
+### Removed
+
+- The `ObjectTypeField` serializer shim. NetBox 4.7's `ContentTypeField` resolves against the field's declared queryset, so the cast to `ObjectType` is no longer needed.
+
+### Fixed
+
+- Custom fields are now exposed by the REST API serializers for both `NetBoxAttachment` and `NetBoxAttachmentAssignment`. They were omitted from the serializers' `fields` list, which DRF drops silently (the field is declared on a NetBox base class, exempting it from the "declared fields must be listed" assertion) — so custom fields were editable in the UI but invisible and unwritable through the API.
+
 ## [11.3.1] - 2026-07-28
 
 ### Changed

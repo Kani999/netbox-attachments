@@ -9,25 +9,12 @@ from netbox_attachments.models import NetBoxAttachment, NetBoxAttachmentAssignme
 from netbox_attachments.utils import validate_object_type
 
 
-class ObjectTypeField(ContentTypeField):
-    """
-    ContentTypeField that returns an ObjectType (NetBox proxy) instance instead
-    of a plain Django ContentType.  NetBox's ContentTypeField.to_internal_value()
-    hardcodes ContentType.objects, so the ForeignKey(to=ObjectType) would reject
-    the returned value without this cast.
-    """
-
-    def to_internal_value(self, data):
-        ct = super().to_internal_value(data)
-        return ObjectType.objects.get(pk=ct.pk)
-
-
 class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="plugins-api:netbox_attachments-api:netboxattachmentassignment-detail"
     )
     attachment = serializers.PrimaryKeyRelatedField(queryset=NetBoxAttachment.objects.all())
-    object_type = ObjectTypeField(queryset=ObjectType.objects.all())
+    object_type = ContentTypeField(queryset=ObjectType.objects.all())
     parent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -41,6 +28,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
             "object_id",
             "parent",
             "tags",
+            "custom_fields",
             "created",
             "last_updated",
         ]
@@ -108,5 +96,6 @@ class NetBoxAttachmentSerializer(PrimaryModelSerializer):
             "last_updated",
             "comments",
             "tags",
+            "custom_fields",
         ]
         brief_fields = ("id", "url", "display", "name", "description", "file")

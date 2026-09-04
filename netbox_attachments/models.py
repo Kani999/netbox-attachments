@@ -8,7 +8,6 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from netbox.models import NetBoxModel, PrimaryModel
-from utilities.querysets import RestrictedQuerySet
 
 from netbox_attachments.utils import attachment_upload
 
@@ -102,8 +101,6 @@ class NetBoxAttachmentAssignment(NetBoxModel):
         on_delete=models.CASCADE,
     )
     object_id = models.PositiveBigIntegerField()
-
-    objects = RestrictedQuerySet.as_manager()
 
     class Meta:
         ordering = ("attachment", "object_type", "object_id")

@@ -15,3 +15,5 @@ CLAUDE.md
 .claude/agents/
 .claude/
 docs/agents/
+# Local issue tracker / agent scratch space
+.scratch/

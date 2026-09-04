@@ -2,6 +2,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from netbox.object_actions import AddObject, BulkDelete, BulkEdit, BulkExport
 from netbox.views import generic
 from utilities.views import register_model_view
 
@@ -33,12 +34,7 @@ class NetBoxAttachmentView(generic.ObjectView):
 @register_model_view(models.NetBoxAttachment, name="list", path="", detail=False)
 class NetBoxAttachmentListView(generic.ObjectListView):
     template_name = "netbox_attachments/netboxattachment_list.html"
-    actions = {
-        "add": {"add"},
-        "export": set(),
-        "bulk_edit": {"change"},
-        "bulk_delete": {"delete"},
-    }
+    actions = (AddObject, BulkExport, BulkEdit, BulkDelete)
     queryset = (
         models.NetBoxAttachment.objects.select_related(
             "owner",
@@ -183,11 +179,7 @@ class NetBoxAttachmentAssignmentListView(generic.ObjectListView):
     table = tables.NetBoxAttachmentAssignmentTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
     filterset_form = forms.NetBoxAttachmentAssignmentFilterForm
-    actions = {
-        "export": set(),
-        "bulk_edit": {"change"},
-        "bulk_delete": {"delete"},
-    }
+    actions = (BulkExport, BulkEdit, BulkDelete)
 
 
 class NetBoxAttachmentPanelListView(generic.ObjectListView):
@@ -207,7 +199,7 @@ class NetBoxAttachmentPanelListView(generic.ObjectListView):
     )
     table = tables.NetBoxAttachmentForObjectTable
     filterset = filtersets.NetBoxAttachmentAssignmentFilterSet
-    actions = {}
+    actions = ()
 
 
 @register_model_view(models.NetBoxAttachmentAssignment, name="edit", detail=True)
