@@ -17,8 +17,8 @@
 
 Supported now:
 
-- NetBox: `4.5.x` – `4.6.x`
-- Plugin: `11.x`
+- NetBox: `4.7.x`
+- Plugin: `12.x` (use `11.x` for NetBox 4.5–4.6)
 - Python: `3.12`, `3.13`, `3.14`
 
 Compatibility details and legacy version notes are documented in [docs/compatibility.md](docs/compatibility.md).
