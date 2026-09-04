@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Custom fields are now exposed by the REST API serializers for both `NetBoxAttachment` and `NetBoxAttachmentAssignment`. They were omitted from the serializers' `fields` list, which DRF drops silently (the field is declared on a NetBox base class, exempting it from the "declared fields must be listed" assertion) — so custom fields were editable in the UI but invisible and unwritable through the API.
+
+### Changed
+
+- Removed a redundant `objects` manager on `NetBoxAttachmentAssignment` (`NetBoxModel` already provides the same `RestrictedQuerySet` manager) and a stray `__init__.py` in the templates directory. No behavior change.
+
 ## [11.3.1] - 2026-07-28
 
 ### Changed

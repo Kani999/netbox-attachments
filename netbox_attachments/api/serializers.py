@@ -41,6 +41,7 @@ class NetBoxAttachmentAssignmentSerializer(NetBoxModelSerializer):
             "object_id",
             "parent",
             "tags",
+            "custom_fields",
             "created",
             "last_updated",
         ]
@@ -108,5 +109,6 @@ class NetBoxAttachmentSerializer(PrimaryModelSerializer):
             "last_updated",
             "comments",
             "tags",
+            "custom_fields",
         ]
         brief_fields = ("id", "url", "display", "name", "description", "file")
