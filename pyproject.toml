@@ -26,7 +26,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["django>=6.1,<7.0", "pytest"]
 
 [project.entry-points."netbox.plugins"]
 netbox_attachments = "netbox_attachments:config"
