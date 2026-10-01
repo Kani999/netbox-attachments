@@ -23,12 +23,13 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "django>=6.1,<7.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
-test = ["django>=6.1,<7.0", "pytest"]
+test = ["pytest"]
+
+[project.entry-points."netbox.plugins"]
+netbox_attachments = "netbox_attachments:config"
 
 [project.urls]
 Homepage = "https://github.com/Kani999/netbox-attachments"
